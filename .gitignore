@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────
+# Datos
+# Los datos crudos del MINEDUC NO se versionan (son grandes y se
+# redescargan desde datosabiertos.mineduc.cl). Tampoco los procesados,
+# que se regeneran corriendo los scripts. Se conservan los .gitkeep
+# para mantener la estructura de carpetas en el repositorio.
+# ─────────────────────────────────────────────────────────────
+raw/*
+!raw/.gitkeep
+processed/*
+!processed/.gitkeep
+
+# Output: las figuras y tablas se regeneran por código.
+# (Si quieres versionar las figuras finales, comenta estas líneas.)
+output/figures/*
+!output/figures/.gitkeep
+output/tables/*
+!output/tables/.gitkeep
+
+# ─────────────────────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# ─────────────────────────────────────────────────────────────
+# Entornos / credenciales
+# ─────────────────────────────────────────────────────────────
+.env
+*.local
+
+# ─────────────────────────────────────────────────────────────
+# Sistema operativo / editores
+# ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

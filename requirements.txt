@@ -1,0 +1,11 @@
+# Dependencias del proyecto.
+# En Google Colab la mayoría ya vienen preinstaladas; este archivo fija
+# el set mínimo para reproducir el análisis en cualquier entorno.
+pandas>=2.0
+numpy>=1.24
+pyreadstat>=1.2      # lectura de archivos .sav/.dta del MINEDUC si aplica
+matplotlib>=3.7
+seaborn>=0.13
+openpyxl>=3.1        # lectura/escritura de Excel (algunas bases vienen en .xlsx)
+requests>=2.31       # descarga de bases desde datosabiertos.mineduc.cl
+tqdm>=4.66           # barras de progreso en descargas/procesamiento
