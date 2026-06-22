@@ -151,11 +151,18 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     mat.columns = [c.strip() for c in mat.columns]
     oferta = pd.read_excel(fo)
     oferta.columns = [c.strip() for c in oferta.columns]
+    # Estandarizar nombres (cambian entre PSU 2014 y PAES 2025).
+    oferta = oferta.rename(columns={
+        "CODIGO_CARRERA": "CODIGO", "UNI_CODIGO": "CODIGO_UNIV",
+        "NOMBRE_UNIVERSIDAD": "UNIVERSIDAD", "NOMBRE_CARRERA": "CARRERA"})
     oferta = oferta[["CODIGO_UNIV", "CODIGO", "UNIVERSIDAD", "CARRERA"]].drop_duplicates(
         ["CODIGO_UNIV", "CODIGO"])
 
     # Matrícula -> nombres (universidad/carrera).
     df = mat.merge(oferta, on=["CODIGO_UNIV", "CODIGO"], how="left")
+    sin_of = df["UNIVERSIDAD"].isna().sum()
+    if sin_of:
+        print(f"[{anio}] aviso: {sin_of:,} matriculados sin match en Oferta")
     df["carrera_elite"] = df["CARRERA"].map(clasificar_elite)
     df["grupo_univ_elite"] = df["UNIVERSIDAD"].map(grupo_univ_elite)
 
@@ -173,18 +180,29 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     df = df[df["carrera_elite"].notna()].copy()
 
     # + datos socioeconómicos / colegio (por ID_aux).
-    cols_b = ["ID_aux", "RBD", "GRUPO_DEPENDENCIA", "INGRESO_BRUTO_FAM"]
+    # La columna de ingreso cambia entre años (PSU: INGRESO_BRUTO_FAM;
+    # PAES: INGRESO_PERCAPITA_GRUPO_FA).
+    col_ing = next((c for c in ("INGRESO_BRUTO_FAM",
+                                "INGRESO_PERCAPITA_GRUPO_FA")
+                    if c in insc.columns), None)
+    if col_ing is None:
+        print(f"[{anio}] sin columna de ingreso reconocible -> se omite")
+        return None
+    cols_b = ["ID_aux", "RBD", "GRUPO_DEPENDENCIA", col_ing]
     insc_b = insc[[c for c in cols_b if c in insc.columns]].copy()
+    insc_b = insc_b.rename(columns={col_ing: "ingreso_tramo"})
     df = df.merge(insc_b, on="ID_aux", how="left")
 
     df["anio"] = int(anio)
+    df["fuente_ingreso"] = col_ing
     df["dependencia"] = df["GRUPO_DEPENDENCIA"].map(clasificar_dependencia)
     df["rbd"] = pd.to_numeric(df.get("RBD"), errors="coerce")
     df["emblematico"] = df["rbd"].isin(rbds_emb)
 
     # vulnerable40: tramos bajos de ingreso hasta acumular el umbral (por año).
-    ing = pd.to_numeric(df["INGRESO_BRUTO_FAM"], errors="coerce")
-    valido = ing.notna()
+    # 99 = "no informa" -> faltante.
+    ing = pd.to_numeric(df["ingreso_tramo"], errors="coerce")
+    valido = ing.notna() & (ing != 99)
     df["ingreso_valido"] = valido
     if valido.any():
         conteo = ing[valido].value_counts().sort_index()
@@ -221,7 +239,8 @@ def main() -> int:
     SALIDA.parent.mkdir(parents=True, exist_ok=True)
     cols_out = ["anio", "ID_aux", "carrera_elite", "UNIVERSIDAD",
                 "grupo_univ_elite", "dependencia", "rbd", "emblematico",
-                "INGRESO_BRUTO_FAM", "ingreso_valido", "vulnerable40"]
+                "fuente_ingreso", "ingreso_tramo", "ingreso_valido",
+                "vulnerable40"]
     serie[[c for c in cols_out if c in serie.columns]].to_csv(
         SALIDA, index=False, encoding="utf-8")
 
