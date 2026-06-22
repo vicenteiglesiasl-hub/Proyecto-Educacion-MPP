@@ -26,11 +26,12 @@ FUENTES = {
     "matricula_educacion_superior": {
         "descripcion": "Matrícula en educación superior (SIES). MRUN, carrera, "
                        "institución, año de ingreso.",
-        # OJO: el 'ckan_id' de datos.gob.cl solo devuelve la pagina HTML del
-        # portal, no el archivo. Usa el enlace directo en 'urls'.
         "portal": "https://datosabiertos.mineduc.cl/matricula-en-educacion-superior/",
         "ckan_id": None,
-        "urls": [],
+        "urls": [
+            # Un archivo .rar por año. Agrega los años que necesites.
+            "https://datosabiertos.mineduc.cl/wp-content/uploads/2025/09/Matricula-Ed-Superior-2025.rar",
+        ],
     },
     "acceso_educacion_superior": {
         "descripcion": "Acceso a la educación superior (DEMRE): puntajes e "
