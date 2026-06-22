@@ -79,6 +79,29 @@ Debe reproducir los patrones de composición del paper original.
 
 Ingeniería Comercial, Derecho, Ingeniería Civil y Medicina.
 
+### Operacionalización en la base SIES (columna `area_carrera_generica`)
+Implementada en `scripts/02_matricula_elite.py`:
+
+| Carrera de élite | Regla sobre `area_carrera_generica` |
+|---|---|
+| Medicina | exactamente `"Medicina"` (excluye `Medicina Veterinaria`) |
+| Ingeniería Comercial | exactamente `"Ingeniería Comercial"` |
+| Derecho | exactamente `"Derecho"` (excluye bachillerato, magister, doctorado y postítulo) |
+| Ingeniería Civil | empieza con `"Ingeniería Civil"` + `"Otras Ingenierías Civiles"` (excluye `Construcción Civil` y técnicos) |
+
+**Filtros transversales:** `nivel_global == "Pregrado"`,
+`tipo_inst_1 == "Universidades"`, `nivel_carrera_1 == "Profesional Con Licenciatura"`.
+
+**Primer año (entrante nuevo):** `anio_ing_carr_ori == cat_periodo`.
+
+**Decisión pendiente:** "Ingeniería Civil" agrupa todas sus variantes
+(Industrial incluida), lo que la infla respecto de las otras tres. Evaluar si
+se restringe a una definición más estrecha. Verificación 2025: Ing. Civil
+20.039, Derecho 10.129, Ing. Comercial 9.017, Medicina 3.112 entrantes.
+
+**Nota técnica:** la base SIES viene en **UTF-8** (a diferencia del Directorio,
+que es latin-1).
+
 ---
 
 ## 4. Liceos emblemáticos
