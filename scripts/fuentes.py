@@ -42,14 +42,14 @@ FUENTES = {
     "matricula_escolar": {
         "descripcion": "Matrícula escolar por estudiante. MRUN, RBD, dependencia, "
                        "comuna, año.",
-        "portal": "http://datos.mineduc.cl/dashboards/19776/descarga-bases-de-datos-de-matricula-por-estudiante/",
+        "portal": "https://datosabiertos.mineduc.cl/matricula-por-estudiante/",
         "ckan_id": None,
         "urls": [],
     },
     "directorio_establecimientos": {
         "descripcion": "Directorio oficial de establecimientos. RBD, nombre, "
                        "comuna, dependencia (para verificar RBD de emblemáticos).",
-        "portal": "http://datos.mineduc.cl/dashboards/20015/descarga-bases-de-datos-directorio-de-establecimientos-educacionales/",
+        "portal": "https://datosabiertos.mineduc.cl/directorio-de-establecimientos-educacionales/",
         "ckan_id": None,
         "urls": [],
     },
