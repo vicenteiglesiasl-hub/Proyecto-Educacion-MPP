@@ -51,7 +51,9 @@ FUENTES = {
                        "comuna, dependencia (para verificar RBD de emblemáticos).",
         "portal": "https://datosabiertos.mineduc.cl/directorio-de-establecimientos-educacionales/",
         "ckan_id": None,
-        "urls": [],
+        "urls": [
+            "https://datosabiertos.mineduc.cl/wp-content/uploads/2025/11/Directorio-Oficial-EE-2025.rar",
+        ],
     },
     "simce_2medio": {
         "descripcion": "Bases SIMCE 2° medio: cuestionario de padres (escolaridad "

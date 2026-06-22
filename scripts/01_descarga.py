@@ -89,16 +89,28 @@ def descargar(url: str, destino: Path) -> Path:
     return destino
 
 
-def descomprimir_si_zip(archivo: Path) -> None:
-    if archivo.suffix.lower() != ".zip":
+def descomprimir(archivo: Path) -> None:
+    """Descomprime .zip (nativo) y .rar (vía patoolib, si está instalado)."""
+    ext = archivo.suffix.lower()
+    if ext not in (".zip", ".rar"):
         return
     carpeta = archivo.with_suffix("")
     if carpeta.exists():
         print(f"   [skip] ya descomprimido: {carpeta.name}")
         return
-    print(f"   [unzip] {archivo.name} -> {carpeta.name}/")
-    with zipfile.ZipFile(archivo) as z:
-        z.extractall(carpeta)
+    carpeta.mkdir(parents=True, exist_ok=True)
+    print(f"   [extract] {archivo.name} -> {carpeta.name}/")
+    if ext == ".zip":
+        with zipfile.ZipFile(archivo) as z:
+            z.extractall(carpeta)
+        return
+    # .rar: necesita una herramienta externa (unar/unrar) vía patoolib.
+    try:
+        import patoolib
+        patoolib.extract_archive(str(archivo), outdir=str(carpeta), verbosity=-1)
+    except Exception as e:  # noqa: BLE001
+        print(f"   [aviso] no pude descomprimir el .rar automáticamente ({e}).")
+        print("           En Colab: !apt-get -qq install -y unar  (y reintenta)")
 
 
 def urls_desde_ckan(ckan_id: str) -> list[str]:
@@ -134,7 +146,7 @@ def procesar_base(clave: str, cfg: dict) -> None:
 
     for url in urls:
         archivo = descargar(url, carpeta / _nombre_archivo(url))
-        descomprimir_si_zip(archivo)
+        descomprimir(archivo)
 
 
 def main(argv: list[str]) -> int:
