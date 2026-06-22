@@ -31,40 +31,64 @@ import argparse
 import csv
 import sys
 import unicodedata
-from difflib import SequenceMatcher
 from pathlib import Path
 
 # Rutas por defecto (relativas a la raiz del repo).
 AQUI = Path(__file__).resolve().parent
 REF_CSV = AQUI / "liceos_emblematicos.csv"
 
-# Umbral de similitud para aceptar un match automaticamente.
-UMBRAL_AUTO = 0.92      # >= esto -> rbd_verificado = "si"
-UMBRAL_REVISAR = 0.75   # entre revisar y auto -> "revisar" (mirar a mano)
+# Umbrales sobre la "cobertura" (fraccion de palabras clave del nombre objetivo
+# que aparecen en el nombre del Directorio).
+UMBRAL_AUTO = 1.0       # todas las palabras presentes -> "si"
+UMBRAL_REVISAR = 0.5    # la mitad o mas -> "revisar" (mirar a mano)
+
+# Palabras genericas que no ayudan a identificar el establecimiento.
+# OJO: NO se incluyen "instituto"/"nacional"/"internado"/"comercial" porque
+# justamente esas distinguen casos como el Instituto Nacional.
+RELLENO = {
+    "liceo", "colegio", "escuela", "centro", "educacional", "polivalente",
+    "de", "del", "la", "el", "los", "las", "y", "n", "nro", "no", "nº",
+}
+
+
+def _sin_tildes(texto: str) -> str:
+    t = unicodedata.normalize("NFKD", str(texto or ""))
+    return "".join(c for c in t if not unicodedata.combining(c)).lower()
+
+
+def tokens(texto: str) -> list[str]:
+    """Palabras clave del nombre: sin tildes, sin puntuacion, sin relleno,
+    sin numeros sueltos ni letras sueltas (codigos tipo 'A-1', 'Nº4')."""
+    t = _sin_tildes(texto)
+    for ch in ".,;:()[]\"'/\\-°ºª":
+        t = t.replace(ch, " ")
+    out = []
+    for p in t.split():
+        if not p or p in RELLENO or p.isdigit() or len(p) == 1:
+            continue
+        out.append(p)
+    return out
 
 
 def normalizar(texto: str) -> str:
-    """Minusculas, sin tildes, sin puntuacion y sin palabras de relleno."""
-    if texto is None:
-        return ""
-    t = unicodedata.normalize("NFKD", str(texto))
-    t = "".join(c for c in t if not unicodedata.combining(c))
-    t = t.lower()
-    # quitar puntuacion basica
-    for ch in ".,;:()[]\"'/\\-":
-        t = t.replace(ch, " ")
-    # palabras de relleno que no aportan a la identificacion
-    relleno = {
-        "liceo", "instituto", "nacional", "colegio", "de", "del", "la", "el",
-        "los", "las", "y", "n", "nro", "no", "experimental", "general",
-        "internado", "comercial",
-    }
-    palabras = [p for p in t.split() if p and p not in relleno]
-    return " ".join(palabras)
+    """Version texto-plano (para comparar comunas)."""
+    return " ".join(_sin_tildes(texto).split())
 
 
-def similitud(a: str, b: str) -> float:
-    return SequenceMatcher(None, a, b).ratio()
+def puntaje(objetivo: list[str], candidato: list[str]) -> tuple[float, int]:
+    """Cobertura del nombre objetivo dentro del candidato.
+
+    Devuelve (cobertura, penalizacion_por_palabras_extra). La cobertura es
+    cuantas palabras clave del objetivo estan en el candidato; la penalizacion
+    (negativa) sirve de desempate para preferir el candidato mas ajustado.
+    """
+    if not objetivo:
+        return 0.0, 0
+    cset = set(candidato)
+    cubiertos = sum(1 for tk in objetivo if tk in cset)
+    cobertura = cubiertos / len(objetivo)
+    extra = len(set(candidato) - set(objetivo))
+    return cobertura, -extra
 
 
 def detectar_columnas(encabezados: list[str]) -> tuple[str, str, str]:
@@ -165,48 +189,65 @@ def main() -> int:
     # Leer e indexar Directorio.
     dir_filas = leer_directorio(archivo_dir)
     col_rbd, col_nombre, col_comuna = detectar_columnas(list(dir_filas[0].keys()))
-    # Indice por comuna normalizada para acotar la busqueda.
-    indice: dict[str, list[tuple[str, str, str]]] = {}
+    # Cada entrada: (rbd, nombre_original, tokens_nombre, comuna_normalizada).
+    registros = []
+    indice: dict[str, list[int]] = {}
     for fila in dir_filas:
         comuna_n = normalizar(fila.get(col_comuna, ""))
-        indice.setdefault(comuna_n, []).append(
-            (str(fila.get(col_rbd, "")).strip(),
-             fila.get(col_nombre, ""),
-             normalizar(fila.get(col_nombre, "")))
-        )
+        registros.append((
+            str(fila.get(col_rbd, "")).strip(),
+            fila.get(col_nombre, ""),
+            tokens(fila.get(col_nombre, "")),
+            comuna_n,
+        ))
+        indice.setdefault(comuna_n, []).append(len(registros) - 1)
+
+    def mejores(objetivo: list[str], idxs: list[int], n: int = 3):
+        puntuados = []
+        for i in idxs:
+            rbd, nom, toks, _ = registros[i]
+            cob, desempate = puntaje(objetivo, toks)
+            if cob > 0:
+                puntuados.append((cob, desempate, rbd, nom))
+        puntuados.sort(reverse=True)
+        return puntuados[:n]
 
     print("\n=== Verificacion de RBD ===")
     n_auto = n_revisar = n_sin = 0
     for r in ref:
-        objetivo = normalizar(r["nombre"])
+        objetivo = tokens(r["nombre"])
         comuna_n = normalizar(r["comuna"])
-        candidatos = indice.get(comuna_n, [])
-        mejor_score, mejor_rbd, mejor_nom = 0.0, "", ""
-        for rbd, nom_orig, nom_n in candidatos:
-            s = similitud(objetivo, nom_n)
-            if s > mejor_score:
-                mejor_score, mejor_rbd, mejor_nom = s, rbd, nom_orig
+        candidatos = mejores(objetivo, indice.get(comuna_n, []))
+        ambito = "comuna"
+        if not candidatos:  # respaldo: buscar en todas las comunas
+            candidatos = mejores(objetivo, range(len(registros)))
+            ambito = "GLOBAL"
 
-        if mejor_score >= UMBRAL_AUTO:
+        cob = candidatos[0][0] if candidatos else 0.0
+        mejor_rbd = candidatos[0][2] if candidatos else ""
+        mejor_nom = candidatos[0][3] if candidatos else ""
+
+        if cob >= UMBRAL_AUTO and ambito == "comuna":
             estado, n_auto = "si", n_auto + 1
-        elif mejor_score >= UMBRAL_REVISAR:
+        elif cob >= UMBRAL_REVISAR:
             estado, n_revisar = "revisar", n_revisar + 1
         else:
             estado, n_sin = "no", n_sin + 1
 
         # No pisar un RBD ya verificado a mano.
         if r.get("rbd_verificado") == "si" and r.get("rbd"):
-            print(f"[manual] {r['nombre']:45s} -> RBD {r['rbd']} (ya verificado)")
+            print(f"[manual ] {r['nombre']:45s} -> RBD {r['rbd']} (ya verificado)")
             continue
 
         if estado != "no":
             r["rbd"] = mejor_rbd
             r["rbd_verificado"] = estado
-            r["fuente_verificacion"] = "Directorio MINEDUC (match automatico)"
-            r["notas"] = f"match='{mejor_nom}' score={mejor_score:.2f}"
+            r["fuente_verificacion"] = f"Directorio MINEDUC (match {ambito})"
+            r["notas"] = f"match='{mejor_nom}' cobertura={cob:.2f}"
         print(f"[{estado:7s}] {r['nombre']:45s} (comuna {r['comuna']}) "
-              f"-> RBD {mejor_rbd or '---'}  score={mejor_score:.2f}  "
-              f"dir='{mejor_nom}'")
+              f"-> RBD {mejor_rbd or '---'}  cob={cob:.2f} [{ambito}]")
+        for cob_c, _, rbd_c, nom_c in candidatos:
+            print(f"            · {cob_c:.2f}  RBD {rbd_c:>6}  {nom_c}")
 
     # Escribir resultado.
     with args.ref.open("w", encoding="utf-8", newline="") as f:
