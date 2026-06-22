@@ -77,8 +77,14 @@ def pct(numerador, denominador) -> str:
 def main() -> int:
     # 1. Matrícula de elite (una fila por matrícula; nos quedamos 1 por mrun+carrera).
     elite = pd.read_csv(PROC / "matricula_elite.csv", low_memory=False)
-    elite = elite[["mrun", "carrera_elite", "cat_periodo",
-                   "nomb_inst"]].drop_duplicates(["mrun", "carrera_elite"])
+    cols_elite = ["mrun", "carrera_elite", "cat_periodo", "nomb_inst"]
+    if "grupo_univ_elite" in elite.columns:
+        cols_elite.append("grupo_univ_elite")
+    elite = elite[cols_elite].drop_duplicates(["mrun", "carrera_elite"])
+    if "grupo_univ_elite" not in elite.columns:
+        elite["grupo_univ_elite"] = None
+        print("[aviso] matricula_elite.csv no trae grupo_univ_elite; "
+              "vuelve a correr el 02 para clasificar universidades de elite.")
     print(f"Entrantes de elite (mrun+carrera únicos): {len(elite):,}")
 
     # 2. Vulnerabilidad.
@@ -110,51 +116,62 @@ def main() -> int:
     SALIDA.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(SALIDA, index=False, encoding="utf-8")
 
-    # --- Cobertura del enlace ---
-    n = len(df)
-    con_demre = df["dependencia_cod"].notna().sum()
-    con_ingreso = df["ingreso_valido"].fillna(False).sum()
-    print(f"\n=== Cobertura del enlace (sobre {n:,} entrantes de elite) ===")
-    print(f"  con registro DEMRE (colegio): {con_demre:,} ({pct(con_demre, n)})")
-    print(f"  con ingreso válido:           {con_ingreso:,} ({pct(con_ingreso, n)})")
+    # Resultados para todas las universidades y solo las de elite (Valenzuela).
+    reportar(df, emb, "TODAS las universidades")
+    elite_df = df[df["grupo_univ_elite"].notna()]
+    reportar(elite_df, emb, "SOLO universidades de ELITE (8 de Valenzuela)")
 
-    # --- Resultado 1: % vulnerable40 por carrera (sobre ingreso válido) ---
-    base = df[df["ingreso_valido"] == True]  # noqa: E712
-    print("\n=== % del 40% más vulnerable, por carrera de elite ===")
-    print("    (base: entrantes con ingreso válido)")
-    r1 = base.groupby("carrera_elite").agg(
-        n_validos=("mrun", "size"),
-        n_vulnerables=("vulnerable40", "sum"))
-    r1["% vulnerable40"] = (100 * r1["n_vulnerables"] / r1["n_validos"]).round(1)
-    print(r1.to_string())
-    tot_v = base["vulnerable40"].sum()
-    print(f"  TOTAL: {pct(tot_v, len(base))} del 40% más vulnerable")
-
-    # --- Resultado 2: dependencia del colegio por carrera ---
-    print("\n=== Dependencia del colegio de egreso, por carrera (%) ===")
-    dep = (df[df["dependencia"] != "sin dato"]
-           .groupby("carrera_elite")["dependencia"]
-           .value_counts(normalize=True).mul(100).round(1)
-           .unstack(fill_value=0))
-    print(dep.to_string())
-
-    # --- Resultado 3: liceos emblemáticos ---
-    print("\n=== Liceos emblemáticos ===")
-    n_emb = df["emblematico"].sum()
-    print(f"  Entrantes de elite egresados de un emblemático: {n_emb:,} "
-          f"({pct(n_emb, n)})")
-    if n_emb:
-        emb_base = df[df["emblematico"] & (df["ingreso_valido"] == True)]  # noqa: E712
-        print(f"  De ellos, del 40% más vulnerable: "
-              f"{pct(emb_base['vulnerable40'].sum(), len(emb_base))}")
-        print("  Top emblemáticos por nº de entrantes de elite:")
-        top = (df[df["emblematico"]].merge(emb[["rbd", "nombre"]], on="rbd",
-                                           how="left")
-               .groupby("nombre").size().sort_values(ascending=False).head(10))
-        print(top.to_string())
+    # Desglose por grupo de universidad de elite.
+    if len(elite_df):
+        print("\n=== % del 40% más vulnerable por grupo de universidad de elite ===")
+        b = elite_df[elite_df["ingreso_valido"] == True]  # noqa: E712
+        g = b.groupby("grupo_univ_elite").agg(
+            n=("mrun", "size"), vuln=("vulnerable40", "sum"))
+        g["% vulnerable40"] = (100 * g["vuln"] / g["n"]).round(1)
+        print(g.to_string())
 
     print(f"\nGuardado: {SALIDA}")
     return 0
+
+
+def reportar(df: pd.DataFrame, emb: pd.DataFrame, etiqueta: str) -> None:
+    """Imprime los tres resultados principales para un subconjunto `df`."""
+    n = len(df)
+    print(f"\n{'='*70}\n### {etiqueta}  (n={n:,} entrantes de elite)\n{'='*70}")
+    if n == 0:
+        return
+    con_demre = df["dependencia_cod"].notna().sum()
+    con_ingreso = (df["ingreso_valido"] == True).sum()  # noqa: E712
+    print(f"  cobertura DEMRE: {pct(con_demre, n)} | "
+          f"ingreso válido: {pct(con_ingreso, n)}")
+
+    # Resultado 1: % vulnerable40 por carrera.
+    base = df[df["ingreso_valido"] == True]  # noqa: E712
+    print("\n  -- % del 40% más vulnerable, por carrera (base: ingreso válido) --")
+    r1 = base.groupby("carrera_elite").agg(
+        n_validos=("mrun", "size"), n_vuln=("vulnerable40", "sum"))
+    r1["%_vuln40"] = (100 * r1["n_vuln"] / r1["n_validos"]).round(1)
+    print(r1.to_string())
+    print(f"  TOTAL: {pct(base['vulnerable40'].sum(), len(base))} del 40% más vulnerable")
+
+    # Resultado 2: dependencia por carrera.
+    print("\n  -- Dependencia del colegio de egreso, por carrera (%) --")
+    dep = (df[df["dependencia"] != "sin dato"]
+           .groupby("carrera_elite")["dependencia"]
+           .value_counts(normalize=True).mul(100).round(1).unstack(fill_value=0))
+    print(dep.to_string())
+
+    # Resultado 3: emblemáticos.
+    n_emb = df["emblematico"].sum()
+    print(f"\n  -- Liceos emblemáticos: {n_emb:,} entrantes ({pct(n_emb, n)}) --")
+    if n_emb:
+        eb = df[df["emblematico"] & (df["ingreso_valido"] == True)]  # noqa: E712
+        print(f"     de ellos, del 40% más vulnerable: "
+              f"{pct(eb['vulnerable40'].sum(), len(eb))}")
+        top = (df[df["emblematico"]].merge(emb[["rbd", "nombre"]], on="rbd",
+                                           how="left")
+               .groupby("nombre").size().sort_values(ascending=False).head(8))
+        print(top.to_string())
 
 
 if __name__ == "__main__":

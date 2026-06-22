@@ -125,6 +125,23 @@ que es latin-1).
 
 ---
 
+## 3b. Universidades de elite (8, según Valenzuela)
+
+El "elite" tiene dos dimensiones: las 4 carreras **y** las universidades. Se
+replican las **8 universidades** de Valenzuela, en tres grupos:
+
+| Grupo | Universidades |
+|---|---|
+| Tradicionales | U. de Chile, P. U. Católica de Chile |
+| Nuevas | U. de los Andes, U. Adolfo Ibáñez*, U. del Desarrollo* |
+| Regionales | U. Téc. Federico Santa María, U. de Concepción, P. U. Católica de Valparaíso |
+
+(*De UAI y UDD se consideran **solo las sedes metropolitanas**.)
+
+Lista en `scripts/referencias/universidades_elite.csv`; clasificación por nombre
+en `scripts/02_matricula_elite.py` (`grupo_univ_elite`). Los resultados se
+reportan tanto para todas las universidades como restringidos a estas 8.
+
 ## 4. Liceos emblemáticos
 
 Listado tradicional (20 establecimientos, fuente Wikipedia confirmada

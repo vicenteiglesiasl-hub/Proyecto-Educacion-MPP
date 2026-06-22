@@ -1,0 +1,9 @@
+sigla,nombre,grupo,solo_sede_rm,notas
+UCH,Universidad de Chile,tradicional,no,
+PUC,Pontificia Universidad Católica de Chile,tradicional,no,
+UANDES,Universidad de los Andes,nueva,no,
+UAI,Universidad Adolfo Ibáñez,nueva,si,Valenzuela considera solo la(s) sede(s) metropolitana(s)
+UDD,Universidad del Desarrollo,nueva,si,Valenzuela considera solo la(s) sede(s) metropolitana(s)
+UTFSM,Universidad Técnica Federico Santa María,regional,no,
+UDEC,Universidad de Concepción,regional,no,
+PUCV,Pontificia Universidad Católica de Valparaíso,regional,no,
