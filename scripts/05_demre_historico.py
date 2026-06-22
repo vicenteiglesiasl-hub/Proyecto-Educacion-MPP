@@ -84,9 +84,13 @@ def clasificar_elite(carrera: str) -> str | None:
         return "Ingeniería Comercial"
     if "CIVIL" in c:
         return "Ingeniería Civil"
+    # Plan común / licenciatura de ingeniería de elite que no dice "civil"
+    # (p. ej. "INGENIERIA Y CIENCIAS PLAN COMUN" UCh, "INGENIERIA" UC):
+    if "CIENCIAS DE LA INGENIERIA" in c:
+        return "Ingeniería Civil"
+    if c == "INGENIERIA":
+        return "Ingeniería Civil"
     if "INGENIERIA" in c and "PLAN COMUN" in c and "QUIMICA" not in c:
-        return "Ingeniería Civil"          # plan común de ingeniería (elite)
-    if "CIENCIAS DE LA INGENIERIA" in c and "PLAN COMUN" in c:
         return "Ingeniería Civil"
     return None
 
