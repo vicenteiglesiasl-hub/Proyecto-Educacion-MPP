@@ -79,9 +79,9 @@ def descargar(url: str, destino: Path) -> Path:
                 if not trozo:
                     break
                 f.write(trozo)
-                if barra:
+                if barra is not None:
                     barra.update(len(trozo))
-        if barra:
+        if barra is not None:
             barra.close()
 
     parcial.rename(destino)
