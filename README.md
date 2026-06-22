@@ -104,8 +104,35 @@ scripts/
 pip install -r requirements.txt
 ```
 
-En Colab basta con clonar el repositorio y, si hace falta, instalar las
-dependencias del `requirements.txt`.
+### Cómo correr esto en Google Colab (recomendado para los datos)
+
+El **código** vive en GitHub; los **datos** se descargan y procesan en Colab
+(que tiene internet libre y máquinas gratis). El flujo es:
+
+> escribir/versionar código aquí → `git push` a GitHub → en Colab `git pull` y ejecutar.
+
+La forma más simple es abrir el notebook **`colab_inicio.ipynb`** en Colab y
+correr sus celdas. O, manualmente, en una celda nueva:
+
+```python
+# 1. Traer el código y cambiarse a la rama de trabajo
+!git clone https://github.com/vicenteiglesiasl-hub/proyecto-educacion-mpp.git
+%cd proyecto-educacion-mpp
+!git checkout claude/gifted-goodall-cs28te
+
+# 2. Cada vez que retomes (para traer cambios nuevos)
+!git pull origin claude/gifted-goodall-cs28te
+
+# 3. Dependencias
+!pip install -q -r requirements.txt
+
+# 4. Descargar bases (ver scripts/fuentes.py antes)
+!python scripts/01_descarga.py
+```
+
+> Nota: este repositorio se desarrolla en un entorno sin acceso a los portales
+> del MINEDUC, por eso las descargas se hacen en Colab, no en el entorno de
+> desarrollo.
 
 ## Referencia
 
