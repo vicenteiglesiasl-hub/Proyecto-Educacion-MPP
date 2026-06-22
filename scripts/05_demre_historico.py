@@ -183,15 +183,27 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
 
     df = df[df["carrera_elite"].notna()].copy()
 
-    # + datos socioeconómicos / colegio (por ID_aux).
-    # La columna de ingreso cambia entre años (PSU: INGRESO_BRUTO_FAM;
-    # PAES: INGRESO_PERCAPITA_GRUPO_FA).
+    # Columna de ingreso (cambia entre años: PSU INGRESO_BRUTO_FAM;
+    # PAES INGRESO_PERCAPITA_GRUPO_FA).
     col_ing = next((c for c in ("INGRESO_BRUTO_FAM",
                                 "INGRESO_PERCAPITA_GRUPO_FA")
                     if c in insc.columns), None)
     if col_ing is None:
         print(f"[{anio}] sin columna de ingreso reconocible -> se omite")
         return None
+
+    # CORTE del 40% más vulnerable: se define sobre TODA la población de
+    # postulantes inscritos (no sobre los matriculados de elite) y luego se
+    # aplica a los matriculados. 99 = "no informa" -> faltante.
+    ing_all = pd.to_numeric(insc[col_ing], errors="coerce")
+    val_all = ing_all.notna() & (ing_all != 99)
+    acum = ((ing_all[val_all].value_counts().sort_index()
+             / int(val_all.sum())).cumsum())
+    corte = float(acum[acum >= UMBRAL_VULN].index.min())
+    print(f"[{anio}] 40% vulnerable = tramos <= {corte:.0f} de {col_ing} "
+          f"(cobertura {acum.loc[corte]:.1%} sobre {int(val_all.sum()):,} inscritos)")
+
+    # + datos socioeconómicos / colegio (por ID_aux).
     cols_b = ["ID_aux", "RBD", "GRUPO_DEPENDENCIA", col_ing]
     insc_b = insc[[c for c in cols_b if c in insc.columns]].copy()
     insc_b = insc_b.rename(columns={col_ing: "ingreso_tramo"})
@@ -203,21 +215,11 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     df["rbd"] = pd.to_numeric(df.get("RBD"), errors="coerce")
     df["emblematico"] = df["rbd"].isin(rbds_emb)
 
-    # vulnerable40: tramos bajos de ingreso hasta acumular el umbral (por año).
-    # 99 = "no informa" -> faltante.
+    # Aplicar el corte (definido sobre todos los inscritos) a los matriculados.
     ing = pd.to_numeric(df["ingreso_tramo"], errors="coerce")
     valido = ing.notna() & (ing != 99)
     df["ingreso_valido"] = valido
-    if valido.any():
-        conteo = ing[valido].value_counts().sort_index()
-        acum = (conteo / conteo.sum()).cumsum()
-        corte = float(acum[acum >= UMBRAL_VULN].index.min())
-        df["vulnerable40"] = valido & (ing <= corte)
-        cob = float(acum.loc[corte])
-        print(f"[{anio}] corte 40% en tramo <= {corte:.0f} "
-              f"(cobertura {cob:.1%})")
-    else:
-        df["vulnerable40"] = False
+    df["vulnerable40"] = valido & (ing <= corte)
 
     print(f"[{anio}] {len(df):,} matriculados de elite | "
           f"en univ. de elite: {df['grupo_univ_elite'].notna().sum():,}")
