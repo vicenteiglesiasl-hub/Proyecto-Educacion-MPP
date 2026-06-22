@@ -1,21 +1,21 @@
 rbd,nombre,comuna,region,anio_fundacion,rbd_verificado,fuente_verificacion,notas
-,Instituto Nacional General José Miguel Carrera,Santiago,Metropolitana,1813,no,,
-,Liceo Valentín Letelier de Santiago,Recoleta,Metropolitana,1888,no,,
-,Liceo Miguel Luis Amunátegui,Santiago,Metropolitana,1890,no,,
-,Liceo de Aplicación,Santiago,Metropolitana,1892,no,,
-,Liceo N.º 1 Javiera Carrera,Santiago,Metropolitana,1894,no,,
-,Liceo Isaura Dinator de Guzmán,Santiago,Metropolitana,1896,no,,
-8499,Internado Nacional Barros Arana,Santiago,Metropolitana,1902,si,MINEDUC MIME (mime.mineduc.cl/ficha?rbd=8499),RBD confirmado manualmente como ejemplo
-,Liceo Manuel Barros Borgoño,Santiago,Metropolitana,1902,no,,
-,Liceo José Victorino Lastarria,Providencia,Metropolitana,1913,no,,
-,Liceo Carmela Silva Donoso,Ñuñoa,Metropolitana,1913,no,,
-,Liceo Miguel de Cervantes y Saavedra,Santiago,Metropolitana,1933,no,,
-,Liceo 7 Luisa Saavedra de González,Providencia,Metropolitana,1942,no,,
-,Liceo Andrés Bello,San Miguel,Metropolitana,1945,no,,
-,Liceo Experimental Gabriela Mistral,Independencia,Metropolitana,1946,no,,
-,Liceo Darío Salas,Santiago,Metropolitana,1947,no,,
-,Liceo Arturo Alessandri Palma,Providencia,Metropolitana,1952,no,,
-,Liceo Confederación Suiza,Santiago,Metropolitana,1956,no,,
-,Liceo Comercial Insuco de Chile (ex-A99),San Miguel,Metropolitana,1960,no,,
-,Liceo Carmela Carvajal de Prat,Providencia,Metropolitana,1961,no,,
-,Liceo Tajamar de Providencia,Providencia,Metropolitana,1971,no,,
+8485,Instituto Nacional General José Miguel Carrera,Santiago,Metropolitana,1813,si,Directorio Oficial EE 2025,dir='LICEO INSTITUTO NACIONAL' (correccion manual; el match top 8768 es otro colegio)
+8494,Liceo Valentín Letelier de Santiago,Recoleta,Metropolitana,1888,si,Directorio Oficial EE 2025,dir='LICEO A-1 VALENTIN LETELIER'
+8490,Liceo Miguel Luis Amunátegui,Santiago,Metropolitana,1890,si,Directorio Oficial EE 2025,dir='LICEO NRO 2 MIGUEL LUIS AMUNATEGUI'
+8491,Liceo de Aplicación,Santiago,Metropolitana,1892,si,Directorio Oficial EE 2025,dir='LICEO DE APLICACION RECTOR JORGE E SCHNEIDER'
+8487,Liceo N.º 1 Javiera Carrera,Santiago,Metropolitana,1894,si,Directorio Oficial EE 2025,dir='LICEO JAVIERA CARRERA'
+8488,Liceo Isaura Dinator de Guzmán,Santiago,Metropolitana,1896,si,Directorio Oficial EE 2025,dir='LICEO N° 4 BICENTENARIO ISAURA DINATOR'
+8499,Internado Nacional Barros Arana,Santiago,Metropolitana,1902,si,Directorio Oficial EE 2025,dir='INTERNADO NACIONAL BARROS ARANA'
+8492,Liceo Manuel Barros Borgoño,Santiago,Metropolitana,1902,si,Directorio Oficial EE 2025,dir='LICEO MANUEL BARROS BORGONO'
+8928,Liceo José Victorino Lastarria,Providencia,Metropolitana,1913,si,Directorio Oficial EE 2025,dir='LICEO JOSE VICTORINO LASTARRIA'
+9073,Liceo Carmela Silva Donoso,Ñuñoa,Metropolitana,1913,si,Directorio Oficial EE 2025,dir='LICEO BICENTENARIO CARMELA SILVA DONOSO' (match global; revisar comuna en directorio)
+24638,Liceo Miguel de Cervantes y Saavedra,Santiago,Metropolitana,1933,si,Directorio Oficial EE 2025,dir='LICEO MIGUEL DE CERVANTES Y SAAVEDRA' (establecimiento principal; existen anexos 24639/24622)
+8926,Liceo 7 Luisa Saavedra de González,Providencia,Metropolitana,1942,si,Directorio Oficial EE 2025,dir='LICEO N°7 DE PROVIDENCIA LUISA SAAVEDRA'
+9406,Liceo Andrés Bello,San Miguel,Metropolitana,1945,si,Directorio Oficial EE 2025,dir='LICEO ANDRES BELLO'
+8497,Liceo Experimental Gabriela Mistral,Independencia,Metropolitana,1946,si,Directorio Oficial EE 2025,dir='LICEO GABRIELA MISTRAL'
+8498,Liceo Darío Salas,Santiago,Metropolitana,1947,si,Directorio Oficial EE 2025,dir='LICEO DARIO SALAS'
+8925,Liceo Arturo Alessandri Palma,Providencia,Metropolitana,1952,si,Directorio Oficial EE 2025,dir='LICEO POLIVALENTE ARTURO ALESSANDRI P.'
+8495,Liceo Confederación Suiza,Santiago,Metropolitana,1956,si,Directorio Oficial EE 2025,dir='LICEO CONFEDERACION SUIZA'
+9409,Liceo Comercial Insuco de Chile (ex-A99),San Miguel,Metropolitana,1960,si,Directorio Oficial EE 2025,dir='LICEO COMERCIAL INSTITUTO SUPERIOR DE COMERCIO DE CHILE (EX A99)'
+8927,Liceo Carmela Carvajal de Prat,Providencia,Metropolitana,1961,si,Directorio Oficial EE 2025,dir='LICEO CARMELA CARVAJAL DE PRAT'
+8930,Liceo Tajamar de Providencia,Providencia,Metropolitana,1971,si,Directorio Oficial EE 2025,dir='LICEO B 42 TAJAMAR' (correccion manual; el match top 8933 es otro colegio)
