@@ -53,6 +53,27 @@ Opciones en evaluación: casos completos / imputación / exclusión.
 
 ---
 
+## 2.0. Fuente para el NSE y el enlace (DECISIÓN ADOPTADA)
+
+**Se usa la base DEMRE "Acceso a la educación superior", NO el SIMCE.**
+
+Motivo: el enlace SIMCE↔SIES exige el identificador individual **MRUN**, que en
+el SIMCE solo está en las bases **restringidas** (solicitud por Ley de
+Transparencia, plazos de semanas). La base **DEMRE** es de acceso público, trae
+**MRUN**, el **establecimiento de egreso** (RBD → dependencia y emblemáticos) e
+**información socioeconómica** (ingreso/educación de los padres), y enlaza con
+SIES por MRUN. Permite avanzar de inmediato.
+
+**Limitación a declarar en el paper (importante):** el DEMRE solo cubre a
+quienes rinden la PSU/PAES, es decir, una población **autoseleccionada
+(truncada)**. Por lo tanto, el "40% más vulnerable" se define **entre los
+postulantes a la educación superior**, no sobre toda la cohorte escolar (como sí
+hace Valenzuela con SIMCE). Esto constituye una **extensión/variante documentada
+de la metodología original**, no una réplica exacta.
+
+> Pendiente opcional: si más adelante se obtiene el SIMCE con MRUN, se puede
+> rehacer el 40% sobre población no truncada para contrastar.
+
 ## 2. Estrategia de cobertura temporal (decisión adoptada)
 
 Prioriza **consistencia metodológica** en el grueso del período y documenta la
