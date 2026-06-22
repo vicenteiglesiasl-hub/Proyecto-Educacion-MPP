@@ -123,6 +123,31 @@ se restringe a una definición más estrecha. Verificación 2025: Ing. Civil
 **Nota técnica:** la base SIES viene en **UTF-8** (a diferencia del Directorio,
 que es latin-1).
 
+### Operacionalización en el DEMRE histórico (nombres crudos de carrera)
+Implementada en `scripts/05_demre_historico.py` (`clasificar_elite`), sobre el
+nombre `CARRERA` de la Oferta académica:
+
+| Carrera | Regla |
+|---|---|
+| Medicina | empieza con "MEDICINA"; excluye "MEDICINA VETERINARIA" y "TECNOLOGIA MEDICA" |
+| Derecho | empieza con "DERECHO" |
+| Ingeniería Comercial | contiene "INGENIERIA COMERCIAL" |
+| Ingeniería Civil | contiene "CIVIL" (excepto "CONSTRUCCION CIVIL"); **más** el plan común de ingeniería de elite que no dice "civil" (p. ej. "INGENIERIA Y CIENCIAS, PLAN COMUN" de la U. de Chile), excluyendo "QUIMICA, PLAN COMUN" |
+
+**Decisión clave (Ing. Civil):** se incluye el "plan común de ingeniería" porque
+en las universidades de elite la Ingeniería Civil se ingresa por esa vía; exigir
+la palabra "civil" dejaría fuera justamente a las más selectivas (U. de Chile,
+PUC).
+
+### Unificación de fuentes (decisión)
+La **serie histórica oficial** del paper se construye **100% desde el portal
+DEMRE** (2004–2025, mismo formato Inscripción+Matrícula+Oferta unidos por
+`ID_aux`), para garantizar criterios homogéneos entre años. El trabajo previo
+con SIES/datosabiertos (2025) queda como **validación cruzada**. La matrícula
+DEMRE corresponde siempre al **sistema centralizado** (misma cobertura todos los
+años). El ingreso cambia de definición entre años (bruto familiar vs per cápita),
+pero siempre se toma el **40% inferior dentro de cada año** (posición relativa).
+
 ---
 
 ## 3b. Universidades de elite (8, según Valenzuela)

@@ -30,6 +30,7 @@ Uso:
 from __future__ import annotations
 
 import glob
+import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -50,15 +51,42 @@ def _norm(t) -> str:
     return "".join(c for c in s if not unicodedata.combining(c)).upper().strip()
 
 
+def _limpia(t) -> str:
+    """Normaliza nombre de carrera: mayúsculas, sin tildes ni puntuación,
+    espacios colapsados."""
+    s = unicodedata.normalize("NFKD", str(t or ""))
+    s = "".join(c for c in s if not unicodedata.combining(c)).upper()
+    s = re.sub(r"[^A-Z0-9 ]", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
 def clasificar_elite(carrera: str) -> str | None:
-    c = _norm(carrera)
-    if c == "MEDICINA":
+    """Clasifica el nombre de carrera del DEMRE en una de las 4 de elite.
+
+    Ingeniería Civil incluye todas las que dicen 'civil' (menos Construcción
+    Civil) y el 'plan común' de ingeniería de las universidades de elite, que
+    es la vía a Ing. Civil aunque no diga 'civil' en el nombre.
+    """
+    c = _limpia(carrera)
+    if not c:
+        return None
+    if "VETERINARIA" in c:                 # excluir Medicina Veterinaria
+        return None
+    if c.startswith("CONSTRUCCION"):       # excluir Construcción Civil
+        return None
+    if c.startswith("TECNOLOGIA"):         # excluir Tecnología Médica, etc.
+        return None
+    if c.startswith("MEDICINA"):
         return "Medicina"
+    if c.startswith("DERECHO"):
+        return "Derecho"
     if "INGENIERIA COMERCIAL" in c:
         return "Ingeniería Comercial"
-    if c == "DERECHO":
-        return "Derecho"
-    if c.startswith("INGENIERIA CIVIL") or "OTRAS INGENIERIAS CIVILES" in c:
+    if "CIVIL" in c:
+        return "Ingeniería Civil"
+    if "INGENIERIA" in c and "PLAN COMUN" in c and "QUIMICA" not in c:
+        return "Ingeniería Civil"          # plan común de ingeniería (elite)
+    if "CIENCIAS DE LA INGENIERIA" in c and "PLAN COMUN" in c:
         return "Ingeniería Civil"
     return None
 
@@ -126,6 +154,18 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     df = mat.merge(oferta, on=["CODIGO_UNIV", "CODIGO"], how="left")
     df["carrera_elite"] = df["CARRERA"].map(clasificar_elite)
     df["grupo_univ_elite"] = df["UNIVERSIDAD"].map(grupo_univ_elite)
+
+    # Autodiagnóstico: en las universidades de elite, ¿qué quedó sin clasificar?
+    eli_all = df[df["grupo_univ_elite"].notna()]
+    sin = eli_all[eli_all["carrera_elite"].isna()]
+    print(f"[{anio}] univ. elite: {len(eli_all):,} matriculados, "
+          f"{eli_all['carrera_elite'].notna().sum():,} en carreras de elite, "
+          f"{len(sin):,} sin clasificar")
+    if len(sin):
+        top = sin["CARRERA"].value_counts().head(6)
+        print(f"        top carreras NO-elite/ignoradas: "
+              f"{dict(top)}")
+
     df = df[df["carrera_elite"].notna()].copy()
 
     # + datos socioeconómicos / colegio (por ID_aux).
