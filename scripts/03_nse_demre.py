@@ -58,26 +58,33 @@ def leer(ruta: str, cols: list[str]) -> pd.DataFrame:
 
 
 def chequear_direccion(socio: pd.DataFrame) -> None:
-    """Confirma que tramo 1 = menor ingreso, cruzando con el NEM del inscrito.
+    """Confirma que tramo 1 = menor ingreso, cruzando con el puntaje PAES.
 
-    Si el ingreso esta bien ordenado, el promedio de PTJE_NEM deberia crecer
-    con el tramo (a mayor ingreso, mayor puntaje, en promedio).
+    Se usa el puntaje PAES estandarizado (PROMEDIO_CM_MAX, comprension lectora +
+    matematica), que SI correlaciona con el ingreso. NO se usa el NEM, que esta
+    normalizado dentro de cada colegio y no sirve para comparar entre colegios.
     """
     insc = _buscar("PUNTAJES")
     if not insc:
         print("[aviso] no encontre la base de puntajes; omito chequeo de direccion.")
         return
-    nem = leer(insc[0], ["MRUN", "PTJE_NEM"])
-    nem["PTJE_NEM"] = pd.to_numeric(nem["PTJE_NEM"], errors="coerce")
-    m = socio.merge(nem, on="MRUN", how="inner")
+    cols = ["MRUN", "PROMEDIO_CM_MAX", "CLEC_MAX"]
+    sc = leer(insc[0], cols)
+    var = "PROMEDIO_CM_MAX" if sc["PROMEDIO_CM_MAX"].notna().any() else "CLEC_MAX"
+    sc[var] = pd.to_numeric(sc[var], errors="coerce")
+    sc = sc[sc[var] > 0]  # 0 = no rindio esa prueba
+    m = socio.merge(sc, on="MRUN", how="inner")
     val = m[m["INGRESO_PERCAPITA_GRUPO_FA"] != COD_NO_INFORMA]
-    prom = val.groupby("INGRESO_PERCAPITA_GRUPO_FA")["PTJE_NEM"].mean()
-    print("\n-- Chequeo de direccion (PTJE_NEM promedio por tramo de ingreso) --")
+    prom = val.groupby("INGRESO_PERCAPITA_GRUPO_FA")[var].mean()
+    print(f"\n-- Chequeo de direccion ({var} promedio por tramo de ingreso) --")
     print(prom.round(0).to_string())
     if prom.notna().sum() >= 2:
         creciente = prom.dropna().is_monotonic_increasing
-        print(f"   NEM crece con el tramo: {creciente} "
-              f"=> tramo 1 {'= menor ingreso (OK)' if creciente else '¿revisar orden?'}")
+        corr = (val[["INGRESO_PERCAPITA_GRUPO_FA", var]]
+                .corr().iloc[0, 1])
+        print(f"   Monotono creciente: {creciente} | correlacion tramo-puntaje: "
+              f"{corr:+.2f}")
+        print(f"   => {'OK: tramo 1 = menor ingreso' if corr > 0 else 'REVISAR orden'}")
 
 
 def main(argv: list[str]) -> int:
