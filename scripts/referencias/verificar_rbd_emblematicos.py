@@ -117,10 +117,33 @@ def leer_directorio(ruta: Path) -> list[dict]:
     raise SystemExit(f"No pude leer el Directorio: {ruta}")
 
 
+def resolver_archivo(ruta: Path) -> Path:
+    """Si `ruta` es una carpeta, busca dentro el archivo del Directorio."""
+    if ruta.is_file():
+        return ruta
+    if ruta.is_dir():
+        # Preferimos CSV; buscamos de forma recursiva.
+        candidatos = sorted(ruta.rglob("*.csv"))
+        if not candidatos:
+            otros = sorted(ruta.rglob("*.xlsx")) + sorted(ruta.rglob("*.xls"))
+            if otros:
+                raise SystemExit(
+                    f"El Directorio vino como Excel ({otros[0].name}). "
+                    "Avisa para adaptar el lector a .xlsx, o exportalo a CSV."
+                )
+            raise SystemExit(f"No encontre ningun .csv dentro de {ruta}")
+        if len(candidatos) > 1:
+            print(f"[aviso] varios CSV en la carpeta; uso el primero: "
+                  f"{candidatos[0].name}")
+        return candidatos[0]
+    raise SystemExit(f"No existe la ruta: {ruta}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--directorio", required=True, type=Path,
-                    help="Ruta al CSV del Directorio de Establecimientos (en raw/).")
+                    help="Ruta al CSV del Directorio, o a la CARPETA que lo "
+                         "contiene (se autodetecta el archivo).")
     ap.add_argument("--ref", type=Path, default=REF_CSV,
                     help="CSV de referencia de emblematicos.")
     args = ap.parse_args()
@@ -131,6 +154,8 @@ def main() -> int:
             "Descargalo desde datosabiertos.mineduc.cl "
             "('Directorio de establecimientos') y dejalo en raw/."
         )
+    archivo_dir = resolver_archivo(args.directorio)
+    print(f"[ok] Usando archivo: {archivo_dir}")
 
     # Leer referencia.
     with args.ref.open(encoding="utf-8", newline="") as f:
@@ -138,7 +163,7 @@ def main() -> int:
         campos = list(ref[0].keys())
 
     # Leer e indexar Directorio.
-    dir_filas = leer_directorio(args.directorio)
+    dir_filas = leer_directorio(archivo_dir)
     col_rbd, col_nombre, col_comuna = detectar_columnas(list(dir_filas[0].keys()))
     # Indice por comuna normalizada para acotar la busqueda.
     indice: dict[str, list[tuple[str, str, str]]] = {}
