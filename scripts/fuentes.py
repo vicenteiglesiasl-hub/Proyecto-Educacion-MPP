@@ -26,8 +26,10 @@ FUENTES = {
     "matricula_educacion_superior": {
         "descripcion": "Matrícula en educación superior (SIES). MRUN, carrera, "
                        "institución, año de ingreso.",
+        # OJO: el 'ckan_id' de datos.gob.cl solo devuelve la pagina HTML del
+        # portal, no el archivo. Usa el enlace directo en 'urls'.
         "portal": "https://datosabiertos.mineduc.cl/matricula-en-educacion-superior/",
-        "ckan_id": "matricula-en-educacion-superior",  # datos.gob.cl
+        "ckan_id": None,
         "urls": [],
     },
     "acceso_educacion_superior": {
@@ -40,14 +42,14 @@ FUENTES = {
     "matricula_escolar": {
         "descripcion": "Matrícula escolar por estudiante. MRUN, RBD, dependencia, "
                        "comuna, año.",
-        "portal": "https://datosabiertos.mineduc.cl/matricula-por-estudiante/",  # verificar
+        "portal": "http://datos.mineduc.cl/dashboards/19776/descarga-bases-de-datos-de-matricula-por-estudiante/",
         "ckan_id": None,
         "urls": [],
     },
     "directorio_establecimientos": {
         "descripcion": "Directorio oficial de establecimientos. RBD, nombre, "
                        "comuna, dependencia (para verificar RBD de emblemáticos).",
-        "portal": "https://datosabiertos.mineduc.cl/directorio-de-establecimientos-educacionales/",  # verificar
+        "portal": "http://datos.mineduc.cl/dashboards/20015/descarga-bases-de-datos-directorio-de-establecimientos-educacionales/",
         "ckan_id": None,
         "urls": [],
     },
