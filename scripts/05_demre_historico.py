@@ -129,9 +129,13 @@ def leer_csv(ruta: str, cols=None) -> pd.DataFrame:
 
 def _buscar(anio_dir: Path, patron: str) -> str | None:
     h = [f for f in glob.glob(str(anio_dir / "**" / "*"), recursive=True)
-         if patron.lower() in Path(f).name.lower() and f.lower().endswith(
-             (".csv", ".xlsx", ".xls"))]
-    return h[0] if h else None
+         if patron.lower() in Path(f).name.lower()
+         and f.lower().endswith((".csv", ".xlsx", ".xls"))
+         and "libro" not in Path(f).name.lower()]   # ignorar diccionarios
+    # Para datos preferimos .csv; la Oferta solo viene en .xlsx.
+    csvs = [f for f in h if f.lower().endswith(".csv")]
+    cand = csvs or h
+    return cand[0] if cand else None
 
 
 def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
