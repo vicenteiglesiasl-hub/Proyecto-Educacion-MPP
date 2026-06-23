@@ -118,17 +118,25 @@ def clasificar_dependencia(cod) -> str:
 
 
 def leer_csv(ruta: str, cols=None) -> pd.DataFrame:
-    # El separador y la codificación cambian entre años; probamos combinaciones
-    # y nos quedamos con la que produce más de una columna.
-    for sep in (";", ","):
-        for enc in ("utf-8", "latin-1"):
-            try:
-                df = pd.read_csv(ruta, sep=sep, encoding=enc, usecols=cols,
-                                 low_memory=False, on_bad_lines="skip")
-                if df.shape[1] > 1:
-                    return df
-            except (UnicodeDecodeError, ValueError):
-                continue
+    # El separador, la codificación y el entrecomillado cambian entre años
+    # (p. ej. 2016 viene con todos los campos entre comillas). Probamos varias
+    # combinaciones, incluido el motor Python (más tolerante) con autodetección
+    # de separador, y nos quedamos con la que produce más de una columna.
+    combos = [
+        dict(sep=";", encoding="utf-8", engine="c"),
+        dict(sep=";", encoding="latin-1", engine="c"),
+        dict(sep=",", encoding="utf-8", engine="c"),
+        dict(sep=";", encoding="latin-1", engine="python"),
+        dict(sep=None, encoding="latin-1", engine="python"),
+    ]
+    for kw in combos:
+        try:
+            df = pd.read_csv(ruta, usecols=cols, on_bad_lines="skip",
+                             quotechar='"', **kw)
+            if df.shape[1] > 1:
+                return df
+        except (UnicodeDecodeError, ValueError, pd.errors.ParserError):
+            continue
     raise SystemExit(f"No pude leer {ruta}")
 
 
