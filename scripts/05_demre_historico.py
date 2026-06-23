@@ -270,6 +270,28 @@ def main() -> int:
          .mean().mul(100).round(1).unstack())
     print(g.to_string())
 
+    # --- Dependencia del colegio de egreso (univ. de elite) por año ---
+    ele = serie[serie["grupo_univ_elite"].notna()]
+    print("\n=== Dependencia del colegio (univ. de elite) por año (%) ===")
+    dep = (ele[ele["dependencia"] != "sin dato"]
+           .groupby("anio")["dependencia"]
+           .value_counts(normalize=True).mul(100).round(1).unstack())
+    print(dep.to_string())
+
+    # --- Liceos emblemáticos como vía de acceso ---
+    print("\n=== Liceos emblemáticos (univ. de elite) por año ===")
+    emb_t = ele.groupby("anio").agg(n=("ID_aux", "size"),
+                                    emblematicos=("emblematico", "sum"))
+    emb_t["%_emblematico"] = (100 * emb_t["emblematicos"] / emb_t["n"]).round(2)
+    print(emb_t.to_string())
+    print("\n=== Entrantes desde emblemáticos: ¿cuántos son del 40% vulnerable? ===")
+    eb = ele[ele["emblematico"] & ele["ingreso_valido"]]
+    if len(eb):
+        ebt = eb.groupby("anio").agg(n=("ID_aux", "size"),
+                                     vuln=("vulnerable40", "sum"))
+        ebt["%_vuln40"] = (100 * ebt["vuln"] / ebt["n"]).round(1)
+        print(ebt.to_string())
+
     print(f"\nGuardado: {SALIDA}")
     return 0
 
