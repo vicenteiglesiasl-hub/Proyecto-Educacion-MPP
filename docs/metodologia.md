@@ -104,11 +104,22 @@ Debe reproducir los patrones de composición del paper original.
    serie desde 2014; en 2009 figura como s/d. Como las nuevas son las más
    cerradas socioeconómicamente, su ausencia en 2009 sesga el total de ese año
    levemente al alza (es decir, el alza real 2009→2025 podría ser algo mayor).
-2. **Cambio en la variable de ingreso.** Los años PSU (2009–2019) usan
-   `INGRESO_BRUTO_FAM` (ingreso bruto del hogar); los años PAES (2023+) usan
-   `INGRESO_PERCAPITA_GRUPO_FA` (per cápita). Son conceptos distintos: parte del
-   salto a 2025 puede deberse al cambio de variable. La comparación más limpia es
-   2009→2019 (misma variable).
+2. **Cambio en la variable de ingreso (y por qué se usa posición relativa).**
+   - PSU (2009–2019): `INGRESO_BRUTO_FAM` = ingreso **bruto familiar total**,
+     en **tramos fijos en pesos de ancho constante ($144.000)**: tramo 1
+     $0–144.000, …, tramo 12 $1.584.001 y más. (El Libro lo rotula "deciles"
+     pero NO lo son: son rangos nominales fijos.)
+   - PAES (2023+): `INGRESO_PERCAPITA_GRUPO_FA` = ingreso **per cápita**, en
+     **deciles nacionales** con rangos en pesos (decil 1 $0–81.150, …, decil 10
+     $904.200 y más).
+   Como los tramos PSU son **nominales fijos**, con inflación la gente sube de
+   tramo sin cambiar su posición relativa (se ve en `fig_dist_ingreso.png`: la
+   distribución de 2009 está cargada en tramos bajos y la de 2019 corrida a la
+   derecha). Por eso NO se comparan tramos absolutos entre años, sino la
+   **posición relativa** (bottom 40%), que es comparable. En 2025 los tramos
+   sí son deciles nacionales per cápita (medida más fuerte para ese año).
+   Además, la no-respuesta de ingreso (código 99) es ~27% en 2025 y casi nula en
+   los años PSU: asimetría a tener presente.
 3. **Emblemáticos no disponibles en 2009.** El ArchivoB de 2009 no incluye el RBD
    del colegio de egreso; la dimensión de liceos emblemáticos arranca en 2014.
 4. **Denominador truncado.** El "40% más vulnerable" se define entre postulantes
