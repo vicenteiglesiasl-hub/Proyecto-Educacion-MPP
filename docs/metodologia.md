@@ -278,8 +278,9 @@ reportan tanto para todas las universidades como restringidos a estas 8.
 
 ## 4. Liceos emblemáticos
 
-Listado tradicional (20 establecimientos, fuente Wikipedia confirmada
-manualmente) en `scripts/referencias/liceos_emblematicos.csv`. La
+Listado tradicional (19 establecimientos; se excluye el Liceo Experimental
+Gabriela Mistral de Independencia respecto del listado de Wikipedia) en
+`scripts/referencias/liceos_emblematicos.csv`. La
 identificación operativa se hace por **RBD**, verificado por código contra el
 Directorio Oficial de Establecimientos del MINEDUC
 (`scripts/referencias/verificar_rbd_emblematicos.py`).
