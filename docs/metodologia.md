@@ -128,6 +128,70 @@ Debe reproducir los patrones de composición del paper original.
    entre años, se pondera el tramo frontera hasta completar exactamente 40%, para
    que la definición sea idéntica y comparable cada año.
 
+## 2.2. Construcción operativa del 40% (peso fraccional)
+
+La variable de ingreso viene en **tramos gruesos** (cajones), así que el límite
+del 40% casi nunca cae justo en el borde de un tramo. Para definir el "40% más
+vulnerable" de forma **exacta, determinista y comparable entre años** se usa un
+**bottom-40% fraccional**, implementado como una columna `peso_vuln40` por
+estudiante:
+
+- Tramos **bajo** la frontera → `peso_vuln40 = 1` (cuentan entero).
+- Tramo **frontera** → `peso_vuln40 = w`, donde
+  `w = (0,40 − acumulado_hasta_el_tramo_anterior) / share_del_tramo_frontera`.
+  **Todos** los estudiantes de ese tramo reciben el mismo `w`.
+- Tramos **sobre** la frontera → `peso_vuln40 = 0`.
+
+El indicador "% del 40% más vulnerable" es el **promedio de `peso_vuln40`** sobre
+el grupo de interés. El corte (tramo frontera y `w`) se calcula sobre **toda la
+población de postulantes inscritos** de cada año y se guarda en
+`results/cortes_40.csv`.
+
+**No hay asignación aleatoria.** No se sortea quién del tramo frontera "es"
+vulnerable (eso metería ruido y no sería reproducible). En su lugar, cada persona
+del tramo frontera aporta una fracción `w`.
+
+*Ejemplo (2014, frontera = tramo 2 con w = 0,86):* si 100 entrantes a la élite
+están en el tramo 2, no se eligen 86 al azar; a los 100 se les asigna peso 0,86,
+de modo que aportan 86 al conteo de vulnerables. Al promediar sobre muchos casos,
+el resultado es el % correcto.
+
+**Supuesto.** Dentro del tramo frontera no se observa el ingreso fino, así que se
+asume que el ingreso *dentro* de ese tramo no está correlacionado con acceder a la
+élite (supuesto estándar para datos agrupados). Bajo ese supuesto, el estimador
+agregado es insesgado.
+
+**Robustez.** Se conserva además `vulnerable40` (binario estricto = solo tramos
+bajo la frontera, sin el tramo frontera) como referencia. Para modelos a nivel
+individual se recomienda usar `peso_vuln40` como ponderador, o reportar
+sensibilidad incluyendo/excluyendo el tramo frontera; no se recomienda la
+asignación aleatoria.
+
+## 2.3. Extensión planificada: anclaje a población nacional vía CASEN
+
+El 40% actual es relativo a los **postulantes** (denominador truncado). Para
+expresarlo como "40% más vulnerable de **toda la población**" se puede anclar los
+tramos a la distribución nacional usando la encuesta **CASEN**:
+
+1. **Rangos en pesos por tramo y año.** PAES (2022, 2025) ya usa deciles
+   nacionales per cápita (no requiere CASEN: el 40% nacional = deciles 1–4). Para
+   los años PSU (2009–2019, `INGRESO_BRUTO_FAM` en tramos fijos de $144.000) se
+   toman los rangos del Libro de Códigos.
+2. **CASEN del año más cercano.** Se usa la distribución de ingreso de los
+   hogares (concepto comparable: ingreso familiar total para PSU; per cápita para
+   PAES), idealmente acotada a hogares con un integrante de la edad de egreso.
+3. **Percentil nacional de cada tramo.** Se ubica cada borde de tramo en la
+   distribución acumulada de CASEN → percentil nacional de ese corte.
+4. **Redefinir el 40% sobre la escala nacional** (mismo peso fraccional, pero la
+   frontera es el percentil 40 *nacional*, no el de los postulantes).
+
+**Cuidados:** emparejar años para que los pesos nominales coincidan (evita
+deflactar manualmente); homogeneizar el concepto de ingreso (familiar vs per
+cápita); CASEN es muestral (usar factores de expansión); y definir la población
+de referencia (todos los hogares vs hogares con jóvenes en edad de postular).
+Esto resolvería la limitación del denominador truncado y haría la serie
+comparable con el enfoque poblacional de Valenzuela (SIMCE).
+
 ## 3. Carreras de élite
 
 Ingeniería Comercial, Derecho, Ingeniería Civil y Medicina.
