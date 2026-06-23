@@ -258,6 +258,8 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
 
     df["anio"] = int(anio)
     df["fuente_ingreso"] = col_ing
+    df["corte_k"] = k                       # tramo frontera del bottom-40%
+    df["peso_frontera"] = round(float(w), 4)  # fracción del tramo frontera
     df["dependencia"] = df["GRUPO_DEPENDENCIA"].map(clasificar_dependencia)
     if "RBD" in df.columns:
         df["rbd"] = pd.to_numeric(df["RBD"], errors="coerce")
@@ -359,9 +361,20 @@ def main() -> int:
         ebt["%_vuln40"] = (eb.groupby("anio")["peso_vuln40"].mean() * 100).round(1)
         print(ebt.to_string())
 
+    # --- Cortes del 40% por año (qué tramos define como vulnerable) ---
+    cortes = serie.groupby("anio").agg(
+        variable_ingreso=("fuente_ingreso", "first"),
+        tramo_frontera=("corte_k", "first"),
+        peso_frontera=("peso_frontera", "first"))
+    cortes["tramos_completos"] = cortes["tramo_frontera"].astype(int) - 1
+    print("\n=== Cortes del 40% más vulnerable por año ===")
+    print("    (tramos 1..tramos_completos enteros + tramo_frontera ponderado)")
+    print(cortes.to_string())
+
     # --- Guardar resúmenes agregados en results/ (sí se versionan en git) ---
     RESULTS = RAIZ / "results"
     RESULTS.mkdir(exist_ok=True)
+    cortes.to_csv(RESULTS / "cortes_40.csv")
     t.to_csv(RESULTS / "serie_vulnerabilidad_total.csv")
     g.to_csv(RESULTS / "serie_vulnerabilidad_por_grupo.csv")
     dep.to_csv(RESULTS / "dependencia_por_anio.csv")
