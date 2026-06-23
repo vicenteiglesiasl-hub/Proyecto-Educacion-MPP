@@ -118,12 +118,17 @@ def clasificar_dependencia(cod) -> str:
 
 
 def leer_csv(ruta: str, cols=None) -> pd.DataFrame:
-    for enc in ("utf-8", "latin-1"):
-        try:
-            return pd.read_csv(ruta, sep=";", encoding=enc, usecols=cols,
-                               low_memory=False)
-        except (UnicodeDecodeError, ValueError):
-            continue
+    # El separador y la codificación cambian entre años; probamos combinaciones
+    # y nos quedamos con la que produce más de una columna.
+    for sep in (";", ","):
+        for enc in ("utf-8", "latin-1"):
+            try:
+                df = pd.read_csv(ruta, sep=sep, encoding=enc, usecols=cols,
+                                 low_memory=False, on_bad_lines="skip")
+                if df.shape[1] > 1:
+                    return df
+            except (UnicodeDecodeError, ValueError):
+                continue
     raise SystemExit(f"No pude leer {ruta}")
 
 
