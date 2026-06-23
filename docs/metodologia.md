@@ -96,6 +96,27 @@ Debe reproducir los patrones de composición del paper original.
 
 ---
 
+## 2.1. Limitaciones y notas (para declarar en el paper)
+
+1. **Nuevas universidades de élite ausentes en 2009.** La matrícula DEMRE es la
+   del sistema centralizado de admisión. UANDES, UAI y UDD se incorporaron a ese
+   sistema recién ~2012–2013, por lo que el grupo "nuevas" solo aparece en la
+   serie desde 2014; en 2009 figura como s/d. Como las nuevas son las más
+   cerradas socioeconómicamente, su ausencia en 2009 sesga el total de ese año
+   levemente al alza (es decir, el alza real 2009→2025 podría ser algo mayor).
+2. **Cambio en la variable de ingreso.** Los años PSU (2009–2019) usan
+   `INGRESO_BRUTO_FAM` (ingreso bruto del hogar); los años PAES (2023+) usan
+   `INGRESO_PERCAPITA_GRUPO_FA` (per cápita). Son conceptos distintos: parte del
+   salto a 2025 puede deberse al cambio de variable. La comparación más limpia es
+   2009→2019 (misma variable).
+3. **Emblemáticos no disponibles en 2009.** El ArchivoB de 2009 no incluye el RBD
+   del colegio de egreso; la dimensión de liceos emblemáticos arranca en 2014.
+4. **Denominador truncado.** El "40% más vulnerable" se define entre postulantes
+   PSU/PAES, no sobre toda la cohorte escolar (ver 2.0).
+5. **Bottom-40% fraccional.** Como los tramos de ingreso son gruesos y cambian
+   entre años, se pondera el tramo frontera hasta completar exactamente 40%, para
+   que la definición sea idéntica y comparable cada año.
+
 ## 3. Carreras de élite
 
 Ingeniería Comercial, Derecho, Ingeniería Civil y Medicina.

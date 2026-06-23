@@ -61,7 +61,12 @@ def fig_vulnerable(df: pd.DataFrame) -> None:
     ax.set_xticks(sorted(df["anio"].unique()))
     ax.grid(True, alpha=0.3)
     ax.legend()
-    fig.tight_layout()
+    nota = ("Nota: las nuevas universidades de élite ingresaron al sistema "
+            "centralizado de admisión desde ~2013;\nen 2009 no están "
+            "disponibles. Ingreso: bruto familiar (PSU 2009–2019) vs per cápita "
+            "(PAES 2025).")
+    fig.subplots_adjust(bottom=0.22)
+    fig.text(0.01, 0.01, nota, fontsize=7, color="#555555")
     fig.savefig(OUT / "fig_vulnerable_serie.png", dpi=150)
     plt.close(fig)
 
