@@ -130,6 +130,12 @@ Debe reproducir los patrones de composición del paper original.
 
 ## 2.2. Construcción operativa del 40% (peso fraccional)
 
+**Definición adoptada (única) del proyecto:** el "40% más vulnerable" es el
+**40% de menor ingreso de los postulantes PSU/PAES de cada año** (universo de
+referencia = postulantes inscritos, no la población nacional), construido con el
+peso fraccional que se describe abajo. Es una definición **relativa a los
+postulantes** y por año.
+
 La variable de ingreso viene en **tramos gruesos** (cajones), así que el límite
 del 40% casi nunca cae justo en el borde de un tramo. Para definir el "40% más
 vulnerable" de forma **exacta, determinista y comparable entre años** se usa un
@@ -167,10 +173,17 @@ individual se recomienda usar `peso_vuln40` como ponderador, o reportar
 sensibilidad incluyendo/excluyendo el tramo frontera; no se recomienda la
 asignación aleatoria.
 
-## 2.3. Extensión planificada: anclaje a población nacional vía CASEN
+## 2.3. Extensión evaluada y NO adoptada: anclaje nacional vía CASEN
 
-El 40% actual es relativo a los **postulantes** (denominador truncado). Para
-expresarlo como "40% más vulnerable de **toda la población**" se puede anclar los
+> **Decisión:** esta extensión fue evaluada y **no se adopta**. El proyecto usa
+> la definición relativa a postulantes (§2.2). Se documenta aquí solo como
+> alternativa para trabajo futuro. Motivo: para un "40% nacional **de cada año**"
+> en los años PSU haría falta la distribución nacional por año (CASEN); se
+> prefirió mantener una única definición simple y reproducible sin datos
+> externos.
+
+El 40% adoptado es relativo a los **postulantes** (denominador truncado). Para
+expresarlo como "40% más vulnerable de **toda la población**" se podría anclar los
 tramos a la distribución nacional usando la encuesta **CASEN**:
 
 1. **Rangos en pesos por tramo y año.** PAES (2022, 2025) ya usa deciles
