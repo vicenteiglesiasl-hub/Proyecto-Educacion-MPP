@@ -222,15 +222,20 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
         return None
 
     # CORTE del 40% más vulnerable: se define sobre TODA la población de
-    # postulantes inscritos (no sobre los matriculados de elite) y luego se
-    # aplica a los matriculados. 99 = "no informa" -> faltante.
+    # postulantes inscritos (no sobre los matriculados de elite). Como los
+    # tramos de ingreso son gruesos y cambian entre años, se usa un "bottom 40%"
+    # FRACCIONAL: tramos completos bajo el 40% + el tramo frontera ponderado
+    # hasta completar 40% exacto -> definición idéntica y comparable cada año.
+    # 99 = "no informa" -> faltante.
     ing_all = pd.to_numeric(insc[col_ing], errors="coerce")
     val_all = ing_all.notna() & (ing_all != 99)
-    acum = ((ing_all[val_all].value_counts().sort_index()
-             / int(val_all.sum())).cumsum())
-    corte = float(acum[acum >= UMBRAL_VULN].index.min())
-    print(f"[{anio}] 40% vulnerable = tramos <= {corte:.0f} de {col_ing} "
-          f"(cobertura {acum.loc[corte]:.1%} sobre {int(val_all.sum()):,} inscritos)")
+    shares = ing_all[val_all].value_counts().sort_index() / int(val_all.sum())
+    cum = shares.cumsum()
+    k = float(cum[cum >= UMBRAL_VULN].index.min())     # tramo frontera
+    cum_prev = float(cum[cum.index < k].max()) if (cum.index < k).any() else 0.0
+    w = (UMBRAL_VULN - cum_prev) / float(shares.loc[k])  # peso del frontera 0..1
+    print(f"[{anio}] 40% vulnerable: tramos < {k:.0f} completos + tramo {k:.0f} "
+          f"al {w:.0%} ({col_ing}, {int(val_all.sum()):,} inscritos)")
 
     # + datos socioeconómicos / colegio (por ID_aux).
     cols_b = ["ID_aux", "RBD", "GRUPO_DEPENDENCIA", col_ing]
@@ -245,10 +250,22 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     df["emblematico"] = df["rbd"].isin(rbds_emb)
 
     # Aplicar el corte (definido sobre todos los inscritos) a los matriculados.
+    # peso_vuln40: 1 si el tramo está bajo la frontera, w si es el frontera, 0 si
+    # está sobre. Su promedio = % comparable del 40% más vulnerable.
     ing = pd.to_numeric(df["ingreso_tramo"], errors="coerce")
     valido = ing.notna() & (ing != 99)
     df["ingreso_valido"] = valido
-    df["vulnerable40"] = valido & (ing <= corte)
+
+    def _peso(t):
+        if pd.isna(t):
+            return None
+        if t < k:
+            return 1.0
+        if t == k:
+            return w
+        return 0.0
+    df["peso_vuln40"] = ing.map(_peso)
+    df["vulnerable40"] = valido & (ing < k)   # versión estricta (referencia)
 
     print(f"[{anio}] {len(df):,} matriculados de elite | "
           f"en univ. de elite: {df['grupo_univ_elite'].notna().sum():,}")
@@ -275,7 +292,7 @@ def main() -> int:
     cols_out = ["anio", "ID_aux", "carrera_elite", "UNIVERSIDAD",
                 "grupo_univ_elite", "dependencia", "rbd", "emblematico",
                 "fuente_ingreso", "ingreso_tramo", "ingreso_valido",
-                "vulnerable40"]
+                "vulnerable40", "peso_vuln40"]
     serie[[c for c in cols_out if c in serie.columns]].to_csv(
         SALIDA, index=False, encoding="utf-8")
 
@@ -287,15 +304,15 @@ def main() -> int:
           .groupby(["grupo_univ_elite", "UNIVERSIDAD"]).size().to_string())
 
     # --- Serie: % del 40% vulnerable por año (solo universidades de elite) ---
+    # Se usa peso_vuln40 (bottom-40% fraccional) -> comparable entre años.
     eli = serie[serie["grupo_univ_elite"].notna() & serie["ingreso_valido"]]
     print("\n=== SERIE: % del 40% más vulnerable en universidades de ELITE ===")
-    t = eli.groupby("anio").agg(n=("ID_aux", "size"),
-                                vuln=("vulnerable40", "sum"))
-    t["%_vuln40"] = (100 * t["vuln"] / t["n"]).round(1)
+    t = eli.groupby("anio").agg(n=("ID_aux", "size"))
+    t["%_vuln40"] = (eli.groupby("anio")["peso_vuln40"].mean() * 100).round(1)
     print(t.to_string())
 
     print("\n=== % vulnerable por grupo de universidad y año ===")
-    g = (eli.groupby(["anio", "grupo_univ_elite"])["vulnerable40"]
+    g = (eli.groupby(["anio", "grupo_univ_elite"])["peso_vuln40"]
          .mean().mul(100).round(1).unstack())
     print(g.to_string())
 
@@ -316,9 +333,8 @@ def main() -> int:
     print("\n=== Entrantes desde emblemáticos: ¿cuántos son del 40% vulnerable? ===")
     eb = ele[ele["emblematico"] & ele["ingreso_valido"]]
     if len(eb):
-        ebt = eb.groupby("anio").agg(n=("ID_aux", "size"),
-                                     vuln=("vulnerable40", "sum"))
-        ebt["%_vuln40"] = (100 * ebt["vuln"] / ebt["n"]).round(1)
+        ebt = eb.groupby("anio").agg(n=("ID_aux", "size"))
+        ebt["%_vuln40"] = (eb.groupby("anio")["peso_vuln40"].mean() * 100).round(1)
         print(ebt.to_string())
 
     print(f"\nGuardado: {SALIDA}")

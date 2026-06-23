@@ -42,8 +42,9 @@ def cargar() -> pd.DataFrame:
 
 def fig_vulnerable(df: pd.DataFrame) -> None:
     base = df[df["ingreso_valido"] == True]  # noqa: E712
-    total = (base.groupby("anio")["vulnerable40"].mean().mul(100))
-    porgrupo = (base.groupby(["anio", "grupo_univ_elite"])["vulnerable40"]
+    col = "peso_vuln40" if "peso_vuln40" in base.columns else "vulnerable40"
+    total = (base.groupby("anio")[col].mean().mul(100))
+    porgrupo = (base.groupby(["anio", "grupo_univ_elite"])[col]
                 .mean().mul(100).unstack())
 
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -89,7 +90,8 @@ def fig_dependencia(df: pd.DataFrame) -> None:
 def fig_emblematicos(df: pd.DataFrame) -> None:
     share = df.groupby("anio")["emblematico"].mean().mul(100)
     eb = df[df["emblematico"] & (df["ingreso_valido"] == True)]  # noqa: E712
-    vuln = eb.groupby("anio")["vulnerable40"].mean().mul(100)
+    col = "peso_vuln40" if "peso_vuln40" in eb.columns else "vulnerable40"
+    vuln = eb.groupby("anio")[col].mean().mul(100)
 
     fig, ax1 = plt.subplots(figsize=(8, 5))
     ax1.bar(share.index, share.values, color="#9467bd", alpha=0.7,
