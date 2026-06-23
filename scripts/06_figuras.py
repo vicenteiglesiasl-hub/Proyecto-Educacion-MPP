@@ -88,8 +88,11 @@ def fig_dependencia(df: pd.DataFrame) -> None:
 
 
 def fig_emblematicos(df: pd.DataFrame) -> None:
-    share = df.groupby("anio")["emblematico"].mean().mul(100)
-    eb = df[df["emblematico"] & (df["ingreso_valido"] == True)]  # noqa: E712
+    # Solo años con RBD disponible (2009 no lo trae).
+    de = df[df["emblematico"].notna()].copy()
+    de["emblematico"] = de["emblematico"].astype(bool)
+    share = de.groupby("anio")["emblematico"].mean().mul(100)
+    eb = de[de["emblematico"] & (de["ingreso_valido"] == True)]  # noqa: E712
     col = "peso_vuln40" if "peso_vuln40" in eb.columns else "vulnerable40"
     vuln = eb.groupby("anio")[col].mean().mul(100)
 

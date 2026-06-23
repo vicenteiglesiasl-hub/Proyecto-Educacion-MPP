@@ -246,8 +246,14 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     df["anio"] = int(anio)
     df["fuente_ingreso"] = col_ing
     df["dependencia"] = df["GRUPO_DEPENDENCIA"].map(clasificar_dependencia)
-    df["rbd"] = pd.to_numeric(df.get("RBD"), errors="coerce")
-    df["emblematico"] = df["rbd"].isin(rbds_emb)
+    if "RBD" in df.columns:
+        df["rbd"] = pd.to_numeric(df["RBD"], errors="coerce")
+        df["emblematico"] = df["rbd"].isin(rbds_emb)
+    else:
+        # Años antiguos (p. ej. 2009) no traen RBD del colegio de egreso.
+        print(f"[{anio}] sin columna RBD -> emblemáticos no disponibles")
+        df["rbd"] = pd.NA
+        df["emblematico"] = pd.NA
 
     # Aplicar el corte (definido sobre todos los inscritos) a los matriculados.
     # peso_vuln40: 1 si el tramo está bajo la frontera, w si es el frontera, 0 si
@@ -324,14 +330,17 @@ def main() -> int:
            .value_counts(normalize=True).mul(100).round(1).unstack())
     print(dep.to_string())
 
-    # --- Liceos emblemáticos como vía de acceso ---
+    # --- Liceos emblemáticos como vía de acceso (solo años con RBD) ---
+    ele_emb = ele[ele["emblematico"].notna()].copy()
+    ele_emb["emblematico"] = ele_emb["emblematico"].astype(bool)
     print("\n=== Liceos emblemáticos (univ. de elite) por año ===")
-    emb_t = ele.groupby("anio").agg(n=("ID_aux", "size"),
-                                    emblematicos=("emblematico", "sum"))
+    print("    (2009 omitido: el DEMRE de ese año no trae RBD del colegio)")
+    emb_t = ele_emb.groupby("anio").agg(n=("ID_aux", "size"),
+                                        emblematicos=("emblematico", "sum"))
     emb_t["%_emblematico"] = (100 * emb_t["emblematicos"] / emb_t["n"]).round(2)
     print(emb_t.to_string())
     print("\n=== Entrantes desde emblemáticos: ¿cuántos son del 40% vulnerable? ===")
-    eb = ele[ele["emblematico"] & ele["ingreso_valido"]]
+    eb = ele_emb[ele_emb["emblematico"] & ele_emb["ingreso_valido"]]
     if len(eb):
         ebt = eb.groupby("anio").agg(n=("ID_aux", "size"))
         ebt["%_vuln40"] = (eb.groupby("anio")["peso_vuln40"].mean() * 100).round(1)
