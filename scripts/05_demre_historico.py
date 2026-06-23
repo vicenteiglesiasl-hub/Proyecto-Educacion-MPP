@@ -346,6 +346,17 @@ def main() -> int:
         ebt["%_vuln40"] = (eb.groupby("anio")["peso_vuln40"].mean() * 100).round(1)
         print(ebt.to_string())
 
+    # --- Guardar resúmenes agregados en results/ (sí se versionan en git) ---
+    RESULTS = RAIZ / "results"
+    RESULTS.mkdir(exist_ok=True)
+    t.to_csv(RESULTS / "serie_vulnerabilidad_total.csv")
+    g.to_csv(RESULTS / "serie_vulnerabilidad_por_grupo.csv")
+    dep.to_csv(RESULTS / "dependencia_por_anio.csv")
+    emb_t.to_csv(RESULTS / "emblematicos_por_anio.csv")
+    if len(eb):
+        ebt.to_csv(RESULTS / "emblematicos_vulnerabilidad.csv")
+    print(f"Resúmenes (versionables) en {RESULTS}/")
+
     print(f"\nGuardado: {SALIDA}")
     return 0
 
