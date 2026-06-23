@@ -138,6 +138,38 @@ def _buscar(anio_dir: Path, patron: str) -> str | None:
     return cand[0] if cand else None
 
 
+def estandariza_oferta(of: pd.DataFrame):
+    """Devuelve la oferta con columnas estándar (CODIGO_UNIV, CODIGO,
+    UNIVERSIDAD, CARRERA) y las llaves de cruce, manejando las variantes de
+    nombres entre años (PSU/PAES). Si no puede mapear, devuelve (None, None)."""
+    of = of.rename(columns=lambda c: str(c).strip())
+    up = {c.upper(): c for c in of.columns}
+
+    def buscar(cands):
+        for k in cands:
+            if k in up:
+                return up[k]
+        return None
+
+    mapa = {
+        "CODIGO_UNIV": buscar(["CODIGO_UNIV", "UNI_CODIGO", "COD_UNIV",
+                               "CODIGO_UNIVERSIDAD", "COD_UNIVERSIDAD"]),
+        "CODIGO": buscar(["CODIGO", "CODIGO_CARRERA", "COD_CARRERA"]),
+        "UNIVERSIDAD": buscar(["UNIVERSIDAD", "NOMBRE_UNIVERSIDAD",
+                               "NOM_UNIVERSIDAD"]),
+        "CARRERA": buscar(["CARRERA", "NOMBRE_CARRERA", "NOM_CARRERA"]),
+    }
+    falta = [k for k in ("CODIGO", "UNIVERSIDAD", "CARRERA") if mapa[k] is None]
+    if falta:
+        print(f"   [oferta] faltan {falta}. Columnas disponibles: "
+              f"{list(of.columns)}")
+        return None, None
+    cols = {v: k for k, v in mapa.items() if v is not None}
+    out = of[list(cols)].rename(columns=cols)
+    keys = ["CODIGO_UNIV", "CODIGO"] if "CODIGO_UNIV" in out.columns else ["CODIGO"]
+    return out.drop_duplicates(keys), keys
+
+
 def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     anio = anio_dir.name
     fb = _buscar(anio_dir, "ArchivoB")
@@ -153,20 +185,17 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     insc.columns = [c.strip() for c in insc.columns]
     mat = leer_csv(fm)
     mat.columns = [c.strip() for c in mat.columns]
-    oferta = pd.read_excel(fo)
-    oferta.columns = [c.strip() for c in oferta.columns]
-    # Estandarizar nombres (cambian entre PSU 2014 y PAES 2025).
-    oferta = oferta.rename(columns={
-        "CODIGO_CARRERA": "CODIGO", "UNI_CODIGO": "CODIGO_UNIV",
-        "NOMBRE_UNIVERSIDAD": "UNIVERSIDAD", "NOMBRE_CARRERA": "CARRERA"})
-    oferta = oferta[["CODIGO_UNIV", "CODIGO", "UNIVERSIDAD", "CARRERA"]].drop_duplicates(
-        ["CODIGO_UNIV", "CODIGO"])
+    oferta, keys = estandariza_oferta(pd.read_excel(fo))
+    if oferta is None:
+        print(f"[{anio}] no pude estandarizar la Oferta -> se omite")
+        return None
 
     # Matrícula -> nombres (universidad/carrera).
-    df = mat.merge(oferta, on=["CODIGO_UNIV", "CODIGO"], how="left")
+    df = mat.merge(oferta, on=keys, how="left")
     sin_of = df["UNIVERSIDAD"].isna().sum()
     if sin_of:
-        print(f"[{anio}] aviso: {sin_of:,} matriculados sin match en Oferta")
+        print(f"[{anio}] aviso: {sin_of:,} matriculados sin match en Oferta "
+              f"(llaves={keys})")
     df["carrera_elite"] = df["CARRERA"].map(clasificar_elite)
     df["grupo_univ_elite"] = df["UNIVERSIDAD"].map(grupo_univ_elite)
 
