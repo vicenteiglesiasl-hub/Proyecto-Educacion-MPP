@@ -77,20 +77,20 @@ Hallazgo doble y consistente a lo largo de toda la serie
 `output/figures/fig_emblematicos.png`):
 
 1. **Declive sostenido como vía de acceso.** La proporción de entrantes a
-   carreras de élite egresados de liceos emblemáticos cae de **6,93% (2011)** a
-   **1,88% (2025)**.
+   carreras de élite egresados de liceos emblemáticos cae de **6,92% (2011)** a
+   **1,87% (2025)**.
 2. **Mayor focalización en los vulnerables.** Entre quienes acceden desde
-   emblemáticos, la proporción del 40% más vulnerable sube de **21,3% (2011)** a
-   **41,3% (2025)**.
+   emblemáticos, la proporción del 40% más vulnerable sube de **21,4% (2011)** a
+   **41,6% (2025)**.
 
 | Año | % entrantes desde emblemáticos | % del 40% vulnerable entre ellos |
 |---|---|---|
-| 2011 | 6,93% | 21,3% |
+| 2011 | 6,92% | 21,4% |
 | 2014 | 4,25% | 23,5% |
 | 2016 | 3,60% | 24,5% |
-| 2019 | 3,18% | 24,9% |
-| 2022 | 2,74% | 36,9% |
-| 2025 | 1,88% | 41,3% |
+| 2019 | 3,18% | 24,8% |
+| 2022 | 2,71% | 37,4% |
+| 2025 | 1,87% | 41,6% |
 
 Los liceos emblemáticos pasaron de ser un canal amplio a uno más estrecho pero
 socialmente más vulnerable, coherente con su declive tras el fin de la selección
