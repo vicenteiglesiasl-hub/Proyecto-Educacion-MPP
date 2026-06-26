@@ -140,11 +140,20 @@ def leer_csv(ruta: str, cols=None) -> pd.DataFrame:
     raise SystemExit(f"No pude leer {ruta}")
 
 
-def leer_oferta(ruta: str) -> pd.DataFrame:
-    """Lee la Oferta académica, robusta al formato: .xlsx, .xls antiguo o CSV
-    (en años viejos viene en .xls, que requiere otro motor)."""
+def leer_oferta(ruta: str):
+    """Lee la Oferta académica, robusta al formato (.xlsx, .xls antiguo, CSV o
+    tabla HTML). Devuelve None si el archivo está vacío/corrupto o no se puede
+    leer, para que el año se omita sin botar toda la corrida."""
+    try:
+        if Path(ruta).stat().st_size == 0:
+            return None
+    except OSError:
+        return None
     if str(ruta).lower().endswith(".csv"):
-        return leer_csv(ruta)
+        try:
+            return leer_csv(ruta)
+        except (Exception, SystemExit):  # noqa: BLE001
+            return None
     for eng in ("openpyxl", "xlrd", "calamine", None):
         try:
             return pd.read_excel(ruta, engine=eng)
@@ -158,7 +167,10 @@ def leer_oferta(ruta: str) -> pd.DataFrame:
                 return max(tablas, key=lambda t: t.shape[1])
         except Exception:  # noqa: BLE001
             continue
-    return leer_csv(ruta)  # último recurso
+    try:
+        return leer_csv(ruta)
+    except (Exception, SystemExit):  # noqa: BLE001
+        return None
 
 
 def _buscar(anio_dir: Path, patron: str) -> str | None:
@@ -219,7 +231,12 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     insc.columns = [c.strip() for c in insc.columns]
     mat = leer_csv(fm)
     mat.columns = [c.strip() for c in mat.columns]
-    oferta, keys = estandariza_oferta(leer_oferta(fo))
+    of_raw = leer_oferta(fo)
+    if of_raw is None:
+        print(f"[{anio}] Oferta vacía o ilegible ({Path(fo).name}); "
+              "re-descárgala -> se omite el año")
+        return None
+    oferta, keys = estandariza_oferta(of_raw)
     if oferta is None:
         print(f"[{anio}] no pude estandarizar la Oferta -> se omite")
         return None
