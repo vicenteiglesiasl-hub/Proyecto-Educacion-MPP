@@ -99,7 +99,11 @@ def grupo_univ_elite(universidad: str) -> str | None:
     n = _norm(universidad)
     if n == "UNIVERSIDAD DE CHILE" or "CATOLICA DE CHILE" in n:
         return "tradicional"
-    if "DE LOS ANDES" in n or "ADOLFO IBANEZ" in n or "DEL DESARROLLO" in n:
+    # "ADOLFO" identifica de forma única y robusta a la U. Adolfo Ibáñez: en los
+    # archivos PAES (2021+) la Ñ de "IBAÑEZ" viene con codificación corrupta
+    # ("IBAÃ‘EZ"), por lo que no se puede depender de la subcadena "IBANEZ" (eso
+    # hacía desaparecer a la UAI de la muestra desde 2021).
+    if "DE LOS ANDES" in n or "ADOLFO" in n or "DEL DESARROLLO" in n:
         return "nueva"
     if ("FEDERICO SANTA MARIA" in n or "DE CONCEPCION" in n
             or "CATOLICA DE VALPARAISO" in n):
