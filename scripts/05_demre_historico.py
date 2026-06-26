@@ -150,6 +150,14 @@ def leer_oferta(ruta: str) -> pd.DataFrame:
             return pd.read_excel(ruta, engine=eng)
         except Exception:  # noqa: BLE001
             continue
+    # Algunos años exportan la Oferta como tabla HTML con extensión .xls.
+    for enc in ("utf-8", "latin-1"):
+        try:
+            tablas = pd.read_html(ruta, encoding=enc)
+            if tablas:
+                return max(tablas, key=lambda t: t.shape[1])
+        except Exception:  # noqa: BLE001
+            continue
     return leer_csv(ruta)  # último recurso
 
 

@@ -8,6 +8,7 @@ matplotlib>=3.7
 seaborn>=0.13
 openpyxl>=3.1        # lectura/escritura de Excel (.xlsx)
 xlrd>=2.0            # lectura de Excel antiguo (.xls) de años viejos del DEMRE
+lxml>=4.9            # respaldo: Oferta exportada como tabla HTML (.xls)
 requests>=2.31       # descarga de bases desde datosabiertos.mineduc.cl
 tqdm>=4.66           # barras de progreso en descargas/procesamiento
 patool>=2.0          # descompresión de archivos .rar (requiere unar/unrar en el sistema)
