@@ -140,6 +140,19 @@ def leer_csv(ruta: str, cols=None) -> pd.DataFrame:
     raise SystemExit(f"No pude leer {ruta}")
 
 
+def leer_oferta(ruta: str) -> pd.DataFrame:
+    """Lee la Oferta académica, robusta al formato: .xlsx, .xls antiguo o CSV
+    (en años viejos viene en .xls, que requiere otro motor)."""
+    if str(ruta).lower().endswith(".csv"):
+        return leer_csv(ruta)
+    for eng in ("openpyxl", "xlrd", "calamine", None):
+        try:
+            return pd.read_excel(ruta, engine=eng)
+        except Exception:  # noqa: BLE001
+            continue
+    return leer_csv(ruta)  # último recurso
+
+
 def _buscar(anio_dir: Path, patron: str) -> str | None:
     h = [f for f in glob.glob(str(anio_dir / "**" / "*"), recursive=True)
          if patron.lower() in Path(f).name.lower()
@@ -198,7 +211,7 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     insc.columns = [c.strip() for c in insc.columns]
     mat = leer_csv(fm)
     mat.columns = [c.strip() for c in mat.columns]
-    oferta, keys = estandariza_oferta(pd.read_excel(fo))
+    oferta, keys = estandariza_oferta(leer_oferta(fo))
     if oferta is None:
         print(f"[{anio}] no pude estandarizar la Oferta -> se omite")
         return None
@@ -371,9 +384,10 @@ def main() -> int:
     print("    (tramos 1..tramos_completos enteros + tramo_frontera ponderado)")
     print(cortes.to_string())
 
-    # --- Guardar resúmenes agregados en results/ (sí se versionan en git) ---
-    RESULTS = RAIZ / "results"
-    RESULTS.mkdir(exist_ok=True)
+    # --- Guardar resúmenes agregados en output/tables/ (no versionado; evita
+    # conflictos con git pull). La copia versionada en results/ se mantiene a mano.
+    RESULTS = RAIZ / "output" / "tables"
+    RESULTS.mkdir(parents=True, exist_ok=True)
     cortes.to_csv(RESULTS / "cortes_40.csv")
     t.to_csv(RESULTS / "serie_vulnerabilidad_total.csv")
     g.to_csv(RESULTS / "serie_vulnerabilidad_por_grupo.csv")
@@ -381,7 +395,7 @@ def main() -> int:
     emb_t.to_csv(RESULTS / "emblematicos_por_anio.csv")
     if len(eb):
         ebt.to_csv(RESULTS / "emblematicos_vulnerabilidad.csv")
-    print(f"Resúmenes (versionables) en {RESULTS}/")
+    print(f"Resúmenes en {RESULTS}/ (la copia versionada vive en results/)")
 
     print(f"\nGuardado: {SALIDA}")
     return 0
