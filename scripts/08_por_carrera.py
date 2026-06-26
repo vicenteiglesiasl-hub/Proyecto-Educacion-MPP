@@ -97,7 +97,10 @@ def figura(vuln: pd.DataFrame) -> None:
                  "(universidades de élite)")
     ax.set_xlabel("Año de admisión")
     ax.set_ylabel("% del 40% más vulnerable")
-    ax.set_xticks(sorted(vuln.index))
+    # Eje X: una marca año por medio (años pares) para evitar solapamiento.
+    ticks = [int(a) for a in sorted(vuln.index) if int(a) % 2 == 0]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([str(a) for a in ticks])
     ax.grid(True, alpha=0.3)
     ax.legend()
     nota = ("Nota: ingreso bruto familiar (PSU 2006–2020) vs per cápita "

@@ -33,6 +33,14 @@ OUT = RAIZ / "output" / "figures"
 COLORES = {"tradicional": "#1f77b4", "nueva": "#d62728", "regional": "#2ca02c"}
 
 
+def _ticks_aa(ax, anios) -> None:
+    """Eje X: una marca año por medio (años pares) para que no se solapen."""
+    anios = sorted(int(a) for a in anios)
+    ticks = [a for a in anios if a % 2 == 0]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([str(a) for a in ticks])
+
+
 def cargar() -> pd.DataFrame:
     if not SERIE.exists():
         raise SystemExit(f"No existe {SERIE}. Corre antes scripts/05_demre_historico.py")
@@ -58,7 +66,7 @@ def fig_vulnerable(df: pd.DataFrame) -> None:
                  "(universidades de élite, por grupo)")
     ax.set_xlabel("Año de admisión")
     ax.set_ylabel("% del 40% más vulnerable")
-    ax.set_xticks(sorted(df["anio"].unique()))
+    _ticks_aa(ax, df["anio"].unique())
     ax.grid(True, alpha=0.3)
     ax.legend()
     nota = ("Nota: las nuevas universidades de élite ingresaron al sistema "
@@ -86,7 +94,9 @@ def fig_dependencia(df: pd.DataFrame) -> None:
     ax.set_xlabel("Año de admisión")
     ax.set_ylabel("% de entrantes")
     ax.legend(title="", bbox_to_anchor=(1.0, 1.0))
-    plt.xticks(rotation=0)
+    # Eje categórico: etiqueta sólo los años pares (el resto se infiere).
+    labels = [str(a) if int(a) % 2 == 0 else "" for a in comp.index]
+    ax.set_xticklabels(labels, rotation=0)
     fig.tight_layout()
     fig.savefig(OUT / "fig_dependencia.png", dpi=150)
     plt.close(fig)
@@ -106,7 +116,7 @@ def fig_emblematicos(df: pd.DataFrame) -> None:
             label="% entrantes desde emblemáticos")
     ax1.set_xlabel("Año de admisión")
     ax1.set_ylabel("% de entrantes de élite desde emblemáticos", color="#9467bd")
-    ax1.set_xticks(sorted(df["anio"].unique()))
+    _ticks_aa(ax1, df["anio"].unique())
     ax2 = ax1.twinx()
     ax2.plot(vuln.index, vuln.values, "o-", color="#d62728", lw=2.5,
              label="% del 40% vulnerable (entre emblemáticos)")
