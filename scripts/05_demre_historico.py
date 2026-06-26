@@ -277,9 +277,10 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     # tramos de ingreso son gruesos y cambian entre años, se usa un "bottom 40%"
     # FRACCIONAL: tramos completos bajo el 40% + el tramo frontera ponderado
     # hasta completar 40% exacto -> definición idéntica y comparable cada año.
-    # 99 = "no informa" -> faltante.
+    # 99 = "no informa"; 0 = sin dato (sentinel fuera del esquema 1..12/1..10,
+    # aparece p. ej. en 2018) -> ambos se tratan como faltantes.
     ing_all = pd.to_numeric(insc[col_ing], errors="coerce")
-    val_all = ing_all.notna() & (ing_all != 99)
+    val_all = ing_all.notna() & ~ing_all.isin([0, 99])
     shares = ing_all[val_all].value_counts().sort_index() / int(val_all.sum())
     cum = shares.cumsum()
     k = float(cum[cum >= UMBRAL_VULN].index.min())     # tramo frontera
@@ -312,7 +313,7 @@ def procesar_anio(anio_dir: Path, rbds_emb: set) -> pd.DataFrame | None:
     # peso_vuln40: 1 si el tramo está bajo la frontera, w si es el frontera, 0 si
     # está sobre. Su promedio = % comparable del 40% más vulnerable.
     ing = pd.to_numeric(df["ingreso_tramo"], errors="coerce")
-    valido = ing.notna() & (ing != 99)
+    valido = ing.notna() & ~ing.isin([0, 99])
     df["ingreso_valido"] = valido
 
     def _peso(t):

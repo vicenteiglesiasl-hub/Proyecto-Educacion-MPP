@@ -118,7 +118,11 @@ Debe reproducir los patrones de composición del paper original.
    derecha). Por eso NO se comparan tramos absolutos entre años, sino la
    **posición relativa** (bottom 40%), que es comparable. En 2025 los tramos
    sí son deciles nacionales per cápita (medida más fuerte para ese año).
-   Además, la no-respuesta de ingreso (código 99) es ~27% en 2025 y casi nula en
+   Tratamiento de faltantes: se excluyen del cálculo los códigos **99**
+   ("no informa") y **0** (sin dato, sentinel fuera del esquema 1..12/1..10 que
+   aparece en algunos años, p. ej. 2018). Tratar el 0 como tramo válido lo
+   contaría erróneamente como el más pobre e inflaría la vulnerabilidad de ese
+   año. Además, la no-respuesta de ingreso (código 99) es ~27% en 2025 y casi nula en
    los años PSU: asimetría a tener presente.
 3. **Emblemáticos no disponibles en 2009.** El ArchivoB de 2009 no incluye el RBD
    del colegio de egreso; la dimensión de liceos emblemáticos arranca en 2014.
